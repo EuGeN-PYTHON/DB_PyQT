@@ -1,0 +1,78 @@
+2022-02-10 19:00:19,715   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:00:19,715   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-10 19:00:46,908   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:00:46,912   INFO    server               Установлено соедение с ПК ('127.0.0.1', 50633)
+2022-02-10 19:00:46,915   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 50633)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:00:46,915   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644508846.912631, 'user': {'account_name': 'Test1'}}
+2022-02-10 19:00:46,915   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 50633)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:00:46,916   INFO    server               Клиент ('127.0.0.1', 50633) отправляет сообщение.
+2022-02-10 19:00:47,417   INFO    server               Клиент ('127.0.0.1', 50633) отключился от сервера.
+2022-02-10 19:00:59,515   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:00:59,518   INFO    server               Установлено соедение с ПК ('127.0.0.1', 50638)
+2022-02-10 19:00:59,518   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 50638)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:00:59,519   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644508859.518674, 'user': {'account_name': 'Test'}}
+2022-02-10 19:00:59,519   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 50638)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:00:59,519   INFO    server               Клиент ('127.0.0.1', 50638) отправляет сообщение.
+2022-02-10 19:01:00,020   INFO    server               Клиент ('127.0.0.1', 50638) отключился от сервера.
+2022-02-10 19:03:47,187   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:03:47,188   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-10 19:03:52,004   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:03:52,008   INFO    server               Установлено соедение с ПК ('127.0.0.1', 50887)
+2022-02-10 19:03:52,011   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 50887)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:03:52,011   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644509032.008022, 'user': {'account_name': 'Test'}}
+2022-02-10 19:03:52,011   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 50887)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:03:52,011   INFO    server               Клиент ('127.0.0.1', 50887) отправляет сообщение.
+2022-02-10 19:03:52,512   INFO    server               Клиент ('127.0.0.1', 50887) отключился от сервера.
+2022-02-10 19:06:00,680   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:06:00,683   INFO    server               Установлено соедение с ПК ('127.0.0.1', 51180)
+2022-02-10 19:06:00,684   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 51180)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:06:00,684   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644509160.683573, 'user': {'account_name': 'Test'}}
+2022-02-10 19:06:00,684   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 51180)>, {'response': 400, 'error': 'Имя занято'}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:06:19,209   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:06:22,417   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:07:03,776   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:07:03,779   DEBUG   server               Вызвана функция Server c параметрами (), {}. Вызван модуль: __main__.  из функции Server().Вызов из функции <module>
+2022-02-10 19:07:03,779   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-10 19:07:07,584   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:07:07,588   INFO    server               Установлено соедение с ПК ('127.0.0.1', 51222)
+2022-02-10 19:07:07,588   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 51222)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:07:07,588   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644509227.588094, 'user': {'account_name': 'Test'}}
+2022-02-10 19:07:07,588   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 51222)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:07:07,588   INFO    server               Клиент ('127.0.0.1', 51222) отправляет сообщение.
+2022-02-10 19:07:08,089   INFO    server               Клиент ('127.0.0.1', 51222) отключился от сервера.
+2022-02-10 19:10:06,499   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:10:06,502   INFO    server               Установлено соедение с ПК ('127.0.0.1', 51455)
+2022-02-10 19:10:06,503   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 51455)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:10:06,503   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644509406.502901, 'user': {'account_name': 'Test'}}
+2022-02-10 19:10:06,503   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 51455)>, {'response': 400, 'error': 'Имя занято'}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:10:09,875   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:10:14,909   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:10:14,912   DEBUG   server               Вызвана функция Server c параметрами (), {}. Вызван модуль: __main__.  из функции Server().Вызов из функции <module>
+2022-02-10 19:10:14,912   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-10 19:10:29,471   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:10:29,474   DEBUG   server               Вызвана функция Server c параметрами (), {}. Вызван модуль: __main__.  из функции Server().Вызов из функции <module>
+2022-02-10 19:10:29,474   INFO    server               Запущен сервер с порта: 7771, сообщения принимаются с адреса: 127.0.0.1
+2022-02-10 19:10:34,101   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:10:34,104   INFO    server               Установлено соедение с ПК ('127.0.0.1', 51507)
+2022-02-10 19:10:34,606   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51507)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:10:34,606   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644509434.104733, 'user': {'account_name': 'Test'}}
+2022-02-10 19:10:34,606   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51507)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:10:34,607   INFO    server               Клиент ('127.0.0.1', 51507) отправляет сообщение.
+2022-02-10 19:10:54,657   DEBUG   server_log_config    Параметры подключения:
+2022-02-10 19:10:54,661   INFO    server               Установлено соедение с ПК ('127.0.0.1', 51516)
+2022-02-10 19:10:54,662   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51516)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:10:54,662   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1644509454.661571, 'user': {'account_name': 'Gest'}}
+2022-02-10 19:10:54,662   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51516)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции check_data_client
+2022-02-10 19:10:54,662   INFO    server               Клиент ('127.0.0.1', 51516) отправляет сообщение.
+2022-02-10 19:11:09,194   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51507)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:11:09,195   DEBUG   server               проверка сообщения от клиента: {'action': 'message', 'from': 'Test', 'to': 'Gest', 'time': 1644509468.7654579, 'mess_text': 'qwe'}
+2022-02-10 19:11:09,195   INFO    server               Клиент ('127.0.0.1', 51507) отправляет сообщение.
+2022-02-10 19:11:09,196   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51516)>, {'action': 'message', 'from': 'Test', 'to': 'Gest', 'time': 1644509468.7654579, 'mess_text': 'qwe'}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции process_message
+2022-02-10 19:11:09,196   INFO    server               Отправлено сообщение пользователю Gest от пользователя Test.
+2022-02-10 19:11:33,754   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51516)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:11:33,755   DEBUG   server               проверка сообщения от клиента: {'action': 'message', 'from': 'Gest', 'to': 'Test', 'time': 1644509493.530171, 'mess_text': 'oke'}
+2022-02-10 19:11:33,755   INFO    server               Клиент ('127.0.0.1', 51516) отправляет сообщение.
+2022-02-10 19:11:33,756   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51507)>, {'action': 'message', 'from': 'Gest', 'to': 'Test', 'time': 1644509493.530171, 'mess_text': 'oke'}), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции process_message
+2022-02-10 19:11:33,756   INFO    server               Отправлено сообщение пользователю Test от пользователя Gest.
+2022-02-10 19:13:09,466   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7771), raddr=('127.0.0.1', 51516)>,), {}. Вызван модуль: base_commands.  из функции srv.base().Вызов из функции base
+2022-02-10 19:13:09,467   DEBUG   server               проверка сообщения от клиента: {'action': 'exit', 'time': 1644509589.157087, 'account_name': 'Gest'}
