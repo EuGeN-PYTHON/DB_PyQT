@@ -1,23 +1,64 @@
-import subprocess
-import time
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Модуль автозапуска сервера и нескольких клиентов"""
 
-PROCESS = []
+import time
+import os
+from subprocess import Popen
+
+CHOICE_TEXT = """
+1 - запуск сервера
+2 - остановка сервера
+3 - запуск 4 клиентов
+4 - остановка клиентов
+5 - остановить все и выйти
+Выберите действие: """
+
+CLIENTS = []
+SERVER = ''
+PATH_TO_FILE = os.path.dirname(__file__)
+TRUE_PATH_TO_FILE = PATH_TO_FILE[PATH_TO_FILE.index('evgeny_varlamov/')+len('evgeny_varlamov/'):]
+PATH_TO_SCRIPT_SERVER = os.path.join(TRUE_PATH_TO_FILE, "server.py")
+PATH_TO_SCRIPT_CLIENTS = os.path.join(TRUE_PATH_TO_FILE, "client.py")
+
 
 while True:
-    ACTION = input('Выберите действие: q - выход, '
-                   's - запустить сервер и клиенты, x - закрыть все окна: ')
+    CHOICE = input(CHOICE_TEXT)
 
-    if ACTION == 'q':
-        break
-    elif ACTION == 's':
-        PROCESS.append(subprocess.Popen('gnome-terminal -- python3 server.py', shell=True))
-        for i in range(3):
+    if CHOICE == '1':
+        print("Запустили сервер")
+        SERVER = Popen(
+            f'osascript -e \'tell application "Terminal" to do'
+            f' script "python3 {PATH_TO_SCRIPT_SERVER}"\'', shell=True)
+    elif CHOICE == '2':
+        # pass
+        print("Убили сервер")
+        SERVER.kill()
+    elif CHOICE == '3':
+        print("Запустили клиенты")
+        for i in range(1):
+            CLIENTS.append(
+                Popen(
+                    f'osascript -e \'tell application "Terminal" to do'
+                    f' script "python3 {PATH_TO_SCRIPT_CLIENTS}"\'',
+                    shell=True))
+            CLIENTS.append(
+                Popen(
+                    f'osascript -e \'tell application "Terminal" to do'
+                    f' script "python3 {PATH_TO_SCRIPT_CLIENTS} -m send"\'',
+                    shell=True))
+            # Задержка для того, что бы отправляющий процесс успел
+            # зарегистрироваться на сервере, и потом в словаре имен
+            # клиентов остался только слушающий клиент
             time.sleep(0.5)
-            PROCESS.append(subprocess.Popen(f'gnome-terminal -- python3 client.py -n test{i}', shell=True))
-        # for i in range(2):
-        #     time.sleep(0.5)
-        #     PROCESS.append(subprocess.Popen('gnome-terminal -- python3 client.py -m listen', shell=True))
-    elif ACTION == 'x':
-        while PROCESS:
-            VICTIM = PROCESS.pop()
-            VICTIM.kill()
+    elif CHOICE == '4':
+        # pass
+        for i in range(len(CLIENTS)):
+            print(CLIENTS[i])
+            CLIENTS[i].kill()
+    elif CHOICE == '5':
+        # break
+        for i in range(len(CLIENTS)):
+            CLIENTS[i].kill()
+        SERVER.kill()
+        break
