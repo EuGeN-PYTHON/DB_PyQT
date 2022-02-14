@@ -1044,3 +1044,69 @@ qwe
 2022-02-13 19:41:10,721   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 56461), raddr=('127.0.0.1', 7771)>, {'action': 'exit', 'time': 1644770470.7208982, 'account_name': 'Test1'}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции send_proc
 2022-02-13 19:41:10,721   INFO    client               Завершение работы по команде пользователя.
 2022-02-13 19:41:11,049   CRITICAL client               Потеряно соединение с сервером.
+2022-02-13 20:27:41,631   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:27:41,634   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:27:41,723   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:27:41,725   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:27:42,281   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:27:42,281   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:27:42,283   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:27:42,283   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:28:06,817   INFO    client               Запущен клиент с парам.: 127.0.0.1, порт: 7771
+2022-02-13 20:28:06,818   DEBUG   client               Создано сообщение presence для пользователя: test1
+2022-02-13 20:28:06,820   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59027), raddr=('127.0.0.1', 7771)>, {'action': 'presence', 'time': 1644773286.8187149, 'user': {'account_name': 'test1'}}), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:28:06,821   DEBUG   client               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59027), raddr=('127.0.0.1', 7771)>,), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:28:06,821   DEBUG   client               Соответствие сообщения от сервера: {'response': 200}
+2022-02-13 20:28:06,821   INFO    client               Принят ответ от сервера 200 : OK
+2022-02-13 20:28:06,822   DEBUG   client               Процессы запущены
+2022-02-13 20:28:11,348   INFO    client               Запущен клиент с парам.: 127.0.0.1, порт: 7771
+2022-02-13 20:28:11,350   DEBUG   client               Создано сообщение presence для пользователя: test1
+2022-02-13 20:28:11,351   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59028), raddr=('127.0.0.1', 7771)>, {'action': 'presence', 'time': 1644773291.350108, 'user': {'account_name': 'test1'}}), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:28:11,352   DEBUG   client               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59028), raddr=('127.0.0.1', 7771)>,), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:28:11,353   DEBUG   client               Соответствие сообщения от сервера: {'response': 400, 'error': 'Имя занято'}
+2022-02-13 20:28:11,353   INFO    client               Принят ответ от сервера 400 : Имя занято
+2022-02-13 20:28:11,353   CRITICAL client               Потеряно соединение с сервером.
+2022-02-13 20:28:11,353   DEBUG   client               Процессы запущены
+2022-02-13 20:28:11,359   CRITICAL client               Потеряно соединение с сервером.
+2022-02-13 20:29:14,476   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:29:14,478   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:29:14,569   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:29:14,571   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:29:15,139   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:29:15,139   DEBUG   client_log_config    Параметры подключения:
+2022-02-13 20:29:15,141   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:29:15,141   DEBUG   client               Вызвана функция Client c параметрами (), {}. Вызван модуль: __main__.  из функции Client().Вызов из функции <module>
+2022-02-13 20:29:20,070   INFO    client               Запущен клиент с парам.: 127.0.0.1, порт: 7771
+2022-02-13 20:29:20,071   DEBUG   client               Создано сообщение presence для пользователя: test1
+2022-02-13 20:29:20,072   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59067), raddr=('127.0.0.1', 7771)>, {'action': 'presence', 'time': 1644773360.071187, 'user': {'account_name': 'test1'}}), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:20,074   DEBUG   client               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59067), raddr=('127.0.0.1', 7771)>,), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:20,074   DEBUG   client               Соответствие сообщения от сервера: {'response': 200}
+2022-02-13 20:29:20,074   INFO    client               Принят ответ от сервера 200 : OK
+2022-02-13 20:29:20,075   DEBUG   client               Процессы запущены
+2022-02-13 20:29:24,993   INFO    client               Запущен клиент с парам.: 127.0.0.1, порт: 7771
+2022-02-13 20:29:24,995   DEBUG   client               Создано сообщение presence для пользователя: test2
+2022-02-13 20:29:24,996   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59071), raddr=('127.0.0.1', 7771)>, {'action': 'presence', 'time': 1644773364.9950879, 'user': {'account_name': 'test2'}}), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:24,997   DEBUG   client               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59071), raddr=('127.0.0.1', 7771)>,), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:24,997   DEBUG   client               Соответствие сообщения от сервера: {'response': 200}
+2022-02-13 20:29:24,997   INFO    client               Принят ответ от сервера 200 : OK
+2022-02-13 20:29:24,998   DEBUG   client               Процессы запущены
+2022-02-13 20:29:29,349   INFO    client               Запущен клиент с парам.: 127.0.0.1, порт: 7771
+2022-02-13 20:29:29,350   DEBUG   client               Создано сообщение presence для пользователя: test3
+2022-02-13 20:29:29,351   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59072), raddr=('127.0.0.1', 7771)>, {'action': 'presence', 'time': 1644773369.350355, 'user': {'account_name': 'test3'}}), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:29,352   DEBUG   client               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59072), raddr=('127.0.0.1', 7771)>,), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:29,352   DEBUG   client               Соответствие сообщения от сервера: {'response': 200}
+2022-02-13 20:29:29,352   INFO    client               Принят ответ от сервера 200 : OK
+2022-02-13 20:29:29,353   DEBUG   client               Процессы запущены
+2022-02-13 20:29:35,038   INFO    client               Запущен клиент с парам.: 127.0.0.1, порт: 7771
+2022-02-13 20:29:35,039   DEBUG   client               Создано сообщение presence для пользователя: test5
+2022-02-13 20:29:35,040   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59075), raddr=('127.0.0.1', 7771)>, {'action': 'presence', 'time': 1644773375.0395892, 'user': {'account_name': 'test5'}}), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:35,041   DEBUG   client               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59075), raddr=('127.0.0.1', 7771)>,), {}. Вызван модуль: base_commands.  из функции clnt.base().Вызов из функции base
+2022-02-13 20:29:35,041   DEBUG   client               Соответствие сообщения от сервера: {'response': 200}
+2022-02-13 20:29:35,041   INFO    client               Принят ответ от сервера 200 : OK
+2022-02-13 20:29:35,042   DEBUG   client               Процессы запущены
+2022-02-13 20:29:49,391   DEBUG   client               Сформирован словарь сообщения: {'action': 'message', 'from': 'test5', 'to': 'test1', 'time': 1644773389.390919, 'mess_text': 'test'}
+2022-02-13 20:29:49,394   DEBUG   client               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59075), raddr=('127.0.0.1', 7771)>, {'action': 'message', 'from': 'test5', 'to': 'test1', 'time': 1644773389.390919, 'mess_text': 'test'}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции create_message
+2022-02-13 20:29:49,394   INFO    client               Отправлено сообщение для пользователя test1
+2022-02-13 20:29:49,576   DEBUG   client               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 59067), raddr=('127.0.0.1', 7771)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции message_from_server
+2022-02-13 20:29:49,576   INFO    client               Получено сообщение от пользователя test5:
+test
