@@ -6,6 +6,9 @@ import os
 import select
 import time
 
+from decripters import Port
+from metaclasses import ServerVerifier
+
 from variables import MAX_CONNECTIONS, DEFAULT_PORT, DEFAULT_IP_ADDRESS
 from base_commands import get_message, send_message
 from log_deco import Log
@@ -20,11 +23,11 @@ messages = []
 
 
 @Log()
-class Server:
+class Server(metaclass=ServerVerifier):
     conn = MAX_CONNECTIONS
-    port = DEFAULT_PORT
+    port = Port()
 
-    def __init__(self, conn=conn, port=port):
+    def __init__(self, conn=MAX_CONNECTIONS, port=DEFAULT_PORT):
         self.conn = conn
         self.port = port
 
