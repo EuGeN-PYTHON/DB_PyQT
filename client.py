@@ -5,6 +5,7 @@ import socket
 import threading
 import time
 import os
+from metaclasses import ClientVerifier
 
 from variables import DEFAULT_IP_ADDRESS, DEFAULT_PORT
 from log_deco import Log
@@ -17,12 +18,12 @@ client_log = logging.getLogger('client_app')
 
 
 @Log()
-class Client:
-    host = DEFAULT_IP_ADDRESS
+class Client(metaclass=ClientVerifier):
+    # host = DEFAULT_IP_ADDRESS
     port = DEFAULT_PORT
 
-    def __init__(self, host=host, port=port):
-        self.host = host
+    def __init__(self, port=port):
+        # self.host = host
         self.port = port
 
     @staticmethod
