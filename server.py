@@ -4,7 +4,12 @@ import json
 import logging
 import os
 import select
+import threading
 import time
+
+from decripters import Port
+from metaclasses import ServerVerifier
+from server_database import ServerDB
 
 from variables import MAX_CONNECTIONS, DEFAULT_PORT, DEFAULT_IP_ADDRESS
 from base_commands import get_message, send_message
@@ -20,21 +25,26 @@ messages = []
 
 
 @Log()
-class Server:
+class Server(threading.Thread, metaclass=ServerVerifier):
     conn = MAX_CONNECTIONS
-    port = DEFAULT_PORT
+    port = Port()
 
-    def __init__(self, conn=conn, port=port):
+    def __init__(self, db, conn=MAX_CONNECTIONS, port=DEFAULT_PORT):
         self.conn = conn
         self.port = port
+        self.db = db
+        super().__init__()
 
-    @staticmethod
-    def check_data_client(msg, msg_lst, client, clients, name_soc):
+    # @staticmethod
+    def check_data_client(self, msg, msg_lst, client, clients, name_soc):
         app_log.debug(f'проверка сообщения от клиента: {msg}')
         if 'action' in msg and msg['action'] == 'presence' and 'time' in msg and \
                 'user' in msg:
             if msg['user']['account_name'] not in name_soc.keys():
+                # app_log.debug(f'Доходит или нет: {msg}')
                 name_soc[msg['user']['account_name']] = client
+                client_ip, client_port = client.getpeername()
+                self.db.log_in(msg['user']['account_name'], client_ip, client_port)
                 send_message(client, {'response': 200})
             else:
                 send_message(client, {
@@ -46,8 +56,10 @@ class Server:
         elif 'action' in msg and msg['action'] == 'message' and 'to' in msg \
                 and 'time' in msg and 'from' in msg and 'mess_text' in msg:
             msg_lst.append(msg)
+            self.db.send_to_user(msg['from'], msg['to'], msg['mess_text'])
             return
         elif 'action' in msg and msg['action'] == 'exit' and 'account_name' in msg:
+            self.db.log_out(msg['account_name'])
             clients.remove(name_soc[msg['account_name']])
             name_soc[msg['account_name']].close()
             del name_soc[msg['account_name']]
@@ -73,8 +85,8 @@ class Server:
                 f'Пользователь {message["to"]} не зарегистрирован на сервере, '
                 f'отправка сообщения невозможна.')
 
-    @classmethod
-    def base(cls):
+    # @classmethod
+    def run(self):
         # server.py -p 8079 -a 192.168.1.2
         if '-a' in sys.argv:
             listen_server = sys.argv[sys.argv.index('-a') + 1]
@@ -146,8 +158,8 @@ class Server:
             if recv_data_lst:
                 for client_with_message in recv_data_lst:
                     try:
-                        cls.check_data_client(get_message(client_with_message),
-                                              messages, client_with_message, clients, name_soc)
+                        self.check_data_client(get_message(client_with_message),
+                                               messages, client_with_message, clients, name_soc)
                         app_log.info(f'Клиент {client_with_message.getpeername()} отправляет сообщение.')
                     except:
                         app_log.info(f'Клиент {client_with_message.getpeername()} '
@@ -155,7 +167,7 @@ class Server:
                         clients.remove(client_with_message)
             for i in messages:
                 try:
-                    cls.process_message(i, name_soc, send_data_lst)
+                    self.process_message(i, name_soc, send_data_lst)
                 except Exception:
                     app_log.info(f"Связь с клиентом с именем {i['to']} была потеряна")
                     clients.remove(name_soc[i['to']])
@@ -178,6 +190,52 @@ class Server:
             #             clients.remove(waiting_client)
 
 
+def main():
+    db = ServerDB()
+    srv = Server(db)
+    srv.daemon = True
+    srv.start()
+
+    print('Поддерживаемые комманды:')
+    print('users - список известных пользователей')
+    print('connected - список подключенных пользователей')
+    print('loghist - история входов пользователя')
+    print('messages - история сообщений')
+    print('exit - завершение работы сервера.')
+    print('help - вывод справки по поддерживаемым командам')
+
+    while True:
+        command = input('Введите комманду: ')
+        if command == 'help':
+            print('Поддерживаемые комманды:')
+            print('users - список известных пользователей')
+            print('connected - список подключенных пользователей')
+            print('loghist - история входов пользователя')
+            print('messages - история сообщений')
+            print('exit - завершение работы сервера.')
+            print('help - вывод справки по поддерживаемым командам')
+        elif command == 'exit':
+            break
+        elif command == 'users':
+            for user in sorted(srv.db.list_clients()):
+                print(f'Пользователь {user[0]}, последний вход: {user[1]}')
+        elif command == 'connected':
+            for user in sorted(srv.db.list_clients_on_server()):
+                print(
+                    f'Пользователь {user[0]}, подключен: {user[1]}:{user[2]}, время установки соединения: {user[3]}')
+        elif command == 'loghist':
+            name = input(
+                'Введите имя пользователя для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
+            for user in sorted(srv.db.history_log_in(name)):
+                print(f'Пользователь: {user[0]} время входа: {user[1]}. Вход с: {user[2]}:{user[3]}')
+        elif command == 'messages':
+            name = input(
+                'Введите имя пользователя от которого отправлены сообщения для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
+            for user in sorted(srv.db.history_messages(name)):
+                print(f'Пользователь: {user[0]} отправил: {user[1]}  сообщение содержанием: {user[3]} в {user[2]}')
+        else:
+            print('Команда не распознана.')
+
+
 if __name__ == '__main__':
-    srv = Server()
-    srv.base()
+    main()
