@@ -5,7 +5,6 @@ from variables import MAX_PACKAGE_LENGTH, ENCODING
 from log_deco import Log
 
 
-
 @Log()
 def get_message(client):
     encoded_response = client.recv(MAX_PACKAGE_LENGTH)
