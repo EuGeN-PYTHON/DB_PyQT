@@ -41,7 +41,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
         if 'action' in msg and msg['action'] == 'presence' and 'time' in msg and \
                 'user' in msg:
             if msg['user']['account_name'] not in name_soc.keys():
-                app_log.debug(f'Доходит или нет: {msg}')
+                # app_log.debug(f'Доходит или нет: {msg}')
                 name_soc[msg['user']['account_name']] = client
                 client_ip, client_port = client.getpeername()
                 self.db.log_in(msg['user']['account_name'], client_ip, client_port)
@@ -56,6 +56,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
         elif 'action' in msg and msg['action'] == 'message' and 'to' in msg \
                 and 'time' in msg and 'from' in msg and 'mess_text' in msg:
             msg_lst.append(msg)
+            self.db.send_to_user(msg['from'], msg['to'], msg['mess_text'])
             return
         elif 'action' in msg and msg['action'] == 'exit' and 'account_name' in msg:
             self.db.log_out(msg['account_name'])
@@ -158,7 +159,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 for client_with_message in recv_data_lst:
                     try:
                         self.check_data_client(get_message(client_with_message),
-                                              messages, client_with_message, clients, name_soc)
+                                               messages, client_with_message, clients, name_soc)
                         app_log.info(f'Клиент {client_with_message.getpeername()} отправляет сообщение.')
                     except:
                         app_log.info(f'Клиент {client_with_message.getpeername()} '
@@ -199,6 +200,7 @@ def main():
     print('users - список известных пользователей')
     print('connected - список подключенных пользователей')
     print('loghist - история входов пользователя')
+    print('messages - история сообщений')
     print('exit - завершение работы сервера.')
     print('help - вывод справки по поддерживаемым командам')
 
@@ -209,6 +211,7 @@ def main():
             print('users - список известных пользователей')
             print('connected - список подключенных пользователей')
             print('loghist - история входов пользователя')
+            print('messages - история сообщений')
             print('exit - завершение работы сервера.')
             print('help - вывод справки по поддерживаемым командам')
         elif command == 'exit':
@@ -225,6 +228,11 @@ def main():
                 'Введите имя пользователя для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
             for user in sorted(srv.db.history_log_in(name)):
                 print(f'Пользователь: {user[0]} время входа: {user[1]}. Вход с: {user[2]}:{user[3]}')
+        elif command == 'messages':
+            name = input(
+                'Введите имя пользователя от которого отправлены сообщения для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
+            for user in sorted(srv.db.history_messages(name)):
+                print(f'Пользователь: {user[0]} отправил: {user[1]}  сообщение содержанием: {user[3]} в {user[2]}')
         else:
             print('Команда не распознана.')
 

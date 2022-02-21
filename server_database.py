@@ -26,6 +26,14 @@ class ServerDB:
             self.ip = ip
             self.port = port
 
+    class HistoryContacts:
+        def __init__(self, from_user, to_user, date, message):
+            self.id = None
+            self.from_user = from_user
+            self.to_user = to_user
+            self.date_time = date
+            self.message = message
+
     def __init__(self):
         self.db = create_engine('sqlite:///db_server.db3', echo=False, pool_recycle=7200)
         self.metadata = MetaData()
@@ -52,11 +60,20 @@ class ServerDB:
                                 Column('port', String)
                                 )
 
+        history_contacts = Table('Clients_history_contacts', self.metadata,
+                                 Column('id', Integer, primary_key=True),
+                                 Column('from_user', ForeignKey('Clients.name')),
+                                 Column('to_user', ForeignKey('Clients.name')),
+                                 Column('date_time', DateTime),
+                                 Column('message', String),
+                                 )
+
         self.metadata.create_all(self.db)
 
         mapper(self.Clients, clients_table)
         mapper(self.ClientsOnServer, clients_on_server)
         mapper(self.HistoryClients, history_clients)
+        mapper(self.HistoryContacts, history_contacts)
 
         Session = sessionmaker(bind=self.db)
         self.session = Session()
@@ -91,6 +108,11 @@ class ServerDB:
 
         self.session.commit()
 
+    def send_to_user(self, from_user, to_user, message):
+        message = self.HistoryContacts(from_user, to_user, datetime.datetime.now(), message)
+        self.session.add(message)
+        self.session.commit()
+
     def list_clients(self):
         query = self.session.query(
             self.Clients.name,
@@ -104,7 +126,7 @@ class ServerDB:
             self.ClientsOnServer.ip,
             self.ClientsOnServer.port,
             self.ClientsOnServer.login_time
-            ).join(self.Clients)
+        ).join(self.Clients)
         return query.all()
 
     def history_log_in(self, username=None):
@@ -117,8 +139,18 @@ class ServerDB:
             query = query.filter(self.Clients.name == username)
         return query.all()
 
-if __name__ == '__main__':
+    def history_messages(self, username=None):
+        query = self.session.query(self.HistoryContacts.from_user,
+                                   self.HistoryContacts.to_user,
+                                   self.HistoryContacts.date_time,
+                                   self.HistoryContacts.message
+                                   )
+        if username:
+            query = query.filter(self.HistoryContacts.from_user == username)
+        return query.all()
 
+
+if __name__ == '__main__':
     server_db = ServerDB()
 
     server_db.log_in('sasha', '127.0.0.1', 8080)

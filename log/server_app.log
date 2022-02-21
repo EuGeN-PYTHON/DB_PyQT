@@ -228,3 +228,74 @@
 2022-02-21 18:31:12,587   DEBUG   server               Доходит или нет: {'action': 'presence', 'time': 1645457472.584952, 'user': {'account_name': 'alex'}}
 2022-02-21 18:31:12,604   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7788), raddr=('127.0.0.1', 53548)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции check_data_client
 2022-02-21 18:31:12,604   INFO    server               Клиент ('127.0.0.1', 53548) отправляет сообщение.
+2022-02-21 18:48:22,617   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:48:22,634   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x101087c70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 18:48:22,634   INFO    server               Запущен сервер с порта: 7788, сообщения принимаются с адреса: 127.0.0.1
+2022-02-21 18:48:28,275   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:48:31,453   INFO    server               Установлено соедение с ПК ('127.0.0.1', 55236)
+2022-02-21 18:48:31,457   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7788), raddr=('127.0.0.1', 55236)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:48:31,457   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1645458511.4535968, 'user': {'account_name': 'alex'}}
+2022-02-21 18:48:31,473   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7788), raddr=('127.0.0.1', 55236)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции check_data_client
+2022-02-21 18:48:31,473   INFO    server               Клиент ('127.0.0.1', 55236) отправляет сообщение.
+2022-02-21 18:48:46,509   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7788), raddr=('127.0.0.1', 55236)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:48:46,509   DEBUG   server               проверка сообщения от клиента: {'action': 'message', 'from': 'alex', 'to': 'alex', 'time': 1645458526.164103, 'mess_text': 'hi'}
+2022-02-21 18:48:46,509   INFO    server               Клиент ('127.0.0.1', 55236) отключился от сервера.
+2022-02-21 18:48:46,510   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7788), raddr=('127.0.0.1', 55236)>, {'action': 'message', 'from': 'alex', 'to': 'alex', 'time': 1645458526.164103, 'mess_text': 'hi'}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции process_message
+2022-02-21 18:48:46,510   INFO    server               Отправлено сообщение пользователю alex от пользователя alex.
+2022-02-21 18:51:54,926   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:51:54,942   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x104ccfc70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 18:51:54,942   INFO    server               Запущен сервер с порта: 7788, сообщения принимаются с адреса: 127.0.0.1
+2022-02-21 18:52:10,192   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:52:10,208   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x104c8fc70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 18:52:10,208   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-21 18:52:14,661   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:52:20,248   INFO    server               Установлено соедение с ПК ('127.0.0.1', 55595)
+2022-02-21 18:52:20,250   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55595)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:52:20,250   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1645458740.2481139, 'user': {'account_name': 'anna'}}
+2022-02-21 18:52:20,269   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55595)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции check_data_client
+2022-02-21 18:52:20,269   INFO    server               Клиент ('127.0.0.1', 55595) отправляет сообщение.
+2022-02-21 18:52:39,313   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55595)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:52:39,314   DEBUG   server               проверка сообщения от клиента: {'action': 'message', 'from': 'anna', 'to': 'anna', 'time': 1645458758.916804, 'mess_text': 'hi'}
+2022-02-21 18:52:39,323   INFO    server               Клиент ('127.0.0.1', 55595) отправляет сообщение.
+2022-02-21 18:52:39,324   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55595)>, {'action': 'message', 'from': 'anna', 'to': 'anna', 'time': 1645458758.916804, 'mess_text': 'hi'}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции process_message
+2022-02-21 18:52:39,324   INFO    server               Отправлено сообщение пользователю anna от пользователя anna.
+2022-02-21 18:52:53,855   INFO    server               Клиент ('127.0.0.1', 55595) отключился от сервера.
+2022-02-21 18:54:39,921   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:54:39,937   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x104f8bc70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 18:54:39,937   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-21 18:54:44,347   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:54:46,565   INFO    server               Установлено соедение с ПК ('127.0.0.1', 55773)
+2022-02-21 18:54:46,568   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55773)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:54:46,568   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1645458886.5654871, 'user': {'account_name': 'anna'}}
+2022-02-21 18:54:46,584   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55773)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции check_data_client
+2022-02-21 18:54:46,584   INFO    server               Клиент ('127.0.0.1', 55773) отправляет сообщение.
+2022-02-21 18:54:55,606   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55773)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:54:55,607   DEBUG   server               проверка сообщения от клиента: {'action': 'message', 'from': 'anna', 'to': 'anna', 'time': 1645458895.368706, 'mess_text': 'hi'}
+2022-02-21 18:54:55,614   INFO    server               Клиент ('127.0.0.1', 55773) отправляет сообщение.
+2022-02-21 18:54:55,614   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55773)>, {'action': 'message', 'from': 'anna', 'to': 'anna', 'time': 1645458895.368706, 'mess_text': 'hi'}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции process_message
+2022-02-21 18:54:55,615   INFO    server               Отправлено сообщение пользователю anna от пользователя anna.
+2022-02-21 18:57:24,935   INFO    server               Клиент ('127.0.0.1', 55773) отключился от сервера.
+2022-02-21 18:58:15,323   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:58:15,339   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x10471bc70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 18:58:15,339   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-21 18:58:20,248   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 18:58:24,746   INFO    server               Установлено соедение с ПК ('127.0.0.1', 55995)
+2022-02-21 18:58:24,749   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55995)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:58:24,749   DEBUG   server               проверка сообщения от клиента: {'action': 'presence', 'time': 1645459104.746311, 'user': {'account_name': 'step'}}
+2022-02-21 18:58:24,767   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55995)>, {'response': 200}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции check_data_client
+2022-02-21 18:58:24,768   INFO    server               Клиент ('127.0.0.1', 55995) отправляет сообщение.
+2022-02-21 18:58:34,789   DEBUG   server               Вызвана функция get_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55995)>,), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции run
+2022-02-21 18:58:34,790   DEBUG   server               проверка сообщения от клиента: {'action': 'message', 'from': 'step', 'to': 'step', 'time': 1645459114.765435, 'mess_text': 'hi'}
+2022-02-21 18:58:34,794   INFO    server               Клиент ('127.0.0.1', 55995) отправляет сообщение.
+2022-02-21 18:58:34,795   DEBUG   server               Вызвана функция send_message c параметрами (<socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 7777), raddr=('127.0.0.1', 55995)>, {'action': 'message', 'from': 'step', 'to': 'step', 'time': 1645459114.765435, 'mess_text': 'hi'}), {}. Вызван модуль: base_commands.  из функции self._bootstrap_inner().Вызов из функции process_message
+2022-02-21 18:58:34,795   INFO    server               Отправлено сообщение пользователю step от пользователя step.
+2022-02-21 19:05:06,635   INFO    server               Клиент ('127.0.0.1', 55995) отключился от сервера.
+2022-02-21 19:05:16,153   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 19:05:16,169   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x104d97c70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 19:05:16,169   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-21 19:05:44,034   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 19:05:44,050   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x102967c70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 19:05:44,050   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
+2022-02-21 19:08:00,877   DEBUG   server_log_config    Параметры подключения:
+2022-02-21 19:08:00,892   DEBUG   server               Вызвана функция Server c параметрами (<server_database.ServerDB object at 0x104d77c70>,), {}. Вызван модуль: __main__.  из функции main().Вызов из функции main
+2022-02-21 19:08:00,892   INFO    server               Запущен сервер с порта: 7777, сообщения принимаются с адреса: 127.0.0.1
