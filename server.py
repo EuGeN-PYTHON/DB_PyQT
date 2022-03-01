@@ -6,10 +6,16 @@ import os
 import select
 import threading
 import time
+import configparser
+import argparse
 
 from decripters import Port
 from metaclasses import ServerVerifier
 from server_database import ServerDB
+from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtCore import QTimer
+from GUI import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 from variables import MAX_CONNECTIONS, DEFAULT_PORT, DEFAULT_IP_ADDRESS
 from base_commands import get_message, send_message
@@ -20,8 +26,21 @@ from log import server_log_config
 
 app_log = logging.getLogger('server_app')
 
+new_connection = False
+conflag_lock = threading.Lock()
+
 clients = []
 messages = []
+
+
+def arg_parser(default_port, default_address):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', default=default_port, type=int, nargs='?')
+    parser.add_argument('-a', default=default_address, nargs='?')
+    namespace = parser.parse_args(sys.argv[1:])
+    listen_address = namespace.a
+    listen_port = namespace.p
+    return listen_address, listen_port
 
 
 @Log()
@@ -37,6 +56,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
 
     # @staticmethod
     def check_data_client(self, msg, msg_lst, client, clients, name_soc):
+        global new_connection
         app_log.debug(f'проверка сообщения от клиента: {msg}')
         if 'action' in msg and msg['action'] == 'presence' and 'time' in msg and \
                 'user' in msg:
@@ -46,6 +66,8 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 client_ip, client_port = client.getpeername()
                 self.db.log_in(msg['user']['account_name'], client_ip, client_port)
                 send_message(client, {'response': 200})
+                with conflag_lock:
+                    new_connection = True
             else:
                 send_message(client, {
                     'response': 400,
@@ -57,13 +79,35 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 and 'time' in msg and 'from' in msg and 'mess_text' in msg:
             msg_lst.append(msg)
             self.db.send_to_user(msg['from'], msg['to'], msg['mess_text'])
+            self.db.process_message(msg['from'], msg['to'])
             return
         elif 'action' in msg and msg['action'] == 'exit' and 'account_name' in msg:
             self.db.log_out(msg['account_name'])
+            app_log.info(f'Клиент {msg["account_name"]} корректно отключился от сервера.')
             clients.remove(name_soc[msg['account_name']])
             name_soc[msg['account_name']].close()
             del name_soc[msg['account_name']]
+            with conflag_lock:
+                new_connection = True
             return
+        elif 'action' in msg and msg['action'] == 'get_contacts' and 'user' in msg and \
+                name_soc[msg['user']] == client:
+            response = {"response": 202, "data_list": None}
+            response["data_list"] = self.db.get_contacts(msg['user'])
+            send_message(client, response)
+        elif 'action' in msg and msg['action'] == 'add' and 'account_name' in msg and 'user' in msg \
+                and name_soc[msg['user']] == client:
+            self.db.add_contact(msg['user'], msg['account_name'])
+            send_message(client, {'response': 200})
+        elif 'action' in msg and msg['action'] == 'remove' and 'account_name' in msg and 'user' in msg \
+                and name_soc[msg['user']] == client:
+            self.db.remove_contact(msg['user'], msg['account_name'])
+            send_message(client, {'response': 200})
+        elif 'action' in msg and msg['action'] == 'add' and 'account_name' in msg \
+                and name_soc[msg['user']] == client:
+            response = {"response": 202, "data_list": None}
+            response["data_list"] = [user[0] for user in self.db.list_clients()]
+            send_message(client, response)
         else:
             send_message(client, {
                 'response': 400,
@@ -116,7 +160,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((address_ip, input_port))
         s.settimeout(0.5)
-        s.listen(MAX_CONNECTIONS)
+        s.listen()
 
         clients = []
         messages = []
@@ -164,6 +208,11 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                     except:
                         app_log.info(f'Клиент {client_with_message.getpeername()} '
                                      f'отключился от сервера.')
+                        for name in name_soc:
+                            if name_soc[name] == client_with_message:
+                                self.db.log_out(name)
+                                del name_soc[name]
+                                break
                         clients.remove(client_with_message)
             for i in messages:
                 try:
@@ -171,6 +220,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 except Exception:
                     app_log.info(f"Связь с клиентом с именем {i['to']} была потеряна")
                     clients.remove(name_soc[i['to']])
+                    self.db.log_out(i['to'])
                     del name_soc[i['to']]
             messages.clear()
 
@@ -191,50 +241,146 @@ class Server(threading.Thread, metaclass=ServerVerifier):
 
 
 def main():
-    db = ServerDB()
+    config = configparser.ConfigParser()
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    config.read(f"{dir_path}/{'server.ini'}")
+
+    # listen_address, listen_port = arg_parser(
+    #     config['SETTINGS']['Default_port'], config['SETTINGS']['Listen_Address'])
+
+    database = ServerDB(
+        os.path.join(
+            config['SETTINGS']['Database_path'],
+            config['SETTINGS']['Database_file']))
+
+    db = ServerDB(database)
     srv = Server(db)
     srv.daemon = True
     srv.start()
 
-    print('Поддерживаемые комманды:')
-    print('users - список известных пользователей')
-    print('connected - список подключенных пользователей')
-    print('loghist - история входов пользователя')
-    print('messages - история сообщений')
-    print('exit - завершение работы сервера.')
-    print('help - вывод справки по поддерживаемым командам')
+    # Создаём графическое окуружение для сервера:
+    server_app = QApplication(sys.argv)  # создаем приложение
+    main_window = MainWindow()
+    # ЗАПУСК РАБОТАЕТ ПАРАЛЕЛЬНО СЕРВЕРА(К ОКНУ)
+    # ГЛАВНОМ ПОТОКЕ ЗАПУСКАЕМ НАШ GUI - ГРАФИЧЕСКИЙ ИНТЕРФЕС ПОЛЬЗОВАТЕЛЯ
 
-    while True:
-        command = input('Введите комманду: ')
-        if command == 'help':
-            print('Поддерживаемые комманды:')
-            print('users - список известных пользователей')
-            print('connected - список подключенных пользователей')
-            print('loghist - история входов пользователя')
-            print('messages - история сообщений')
-            print('exit - завершение работы сервера.')
-            print('help - вывод справки по поддерживаемым командам')
-        elif command == 'exit':
-            break
-        elif command == 'users':
-            for user in sorted(srv.db.list_clients()):
-                print(f'Пользователь {user[0]}, последний вход: {user[1]}')
-        elif command == 'connected':
-            for user in sorted(srv.db.list_clients_on_server()):
-                print(
-                    f'Пользователь {user[0]}, подключен: {user[1]}:{user[2]}, время установки соединения: {user[3]}')
-        elif command == 'loghist':
-            name = input(
-                'Введите имя пользователя для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
-            for user in sorted(srv.db.history_log_in(name)):
-                print(f'Пользователь: {user[0]} время входа: {user[1]}. Вход с: {user[2]}:{user[3]}')
-        elif command == 'messages':
-            name = input(
-                'Введите имя пользователя от которого отправлены сообщения для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
-            for user in sorted(srv.db.history_messages(name)):
-                print(f'Пользователь: {user[0]} отправил: {user[1]}  сообщение содержанием: {user[3]} в {user[2]}')
+    # Инициализируем параметры в окна Главное окно
+    main_window.statusBar().showMessage('Server Working')  # подвал
+    main_window.active_clients_table.setModel(
+        gui_create_model(database))  # заполняем таблицу основного окна делаем разметку и заполянем ее
+    main_window.active_clients_table.resizeColumnsToContents()
+    main_window.active_clients_table.resizeRowsToContents()
+
+    # Функция обновляющяя список подключённых, проверяет флаг подключения, и
+    # если надо обновляет список
+    def list_update():
+        global new_connection
+        if new_connection:
+            main_window.active_clients_table.setModel(
+                gui_create_model(database))
+            main_window.active_clients_table.resizeColumnsToContents()
+            main_window.active_clients_table.resizeRowsToContents()
+            with conflag_lock:
+                new_connection = False
+
+    # Функция создающяя окно со статистикой клиентов
+    def show_statistics():
+        global stat_window
+        stat_window = HistoryWindow()
+        stat_window.history_table.setModel(create_stat_model(database))
+        stat_window.history_table.resizeColumnsToContents()
+        stat_window.history_table.resizeRowsToContents()
+        # stat_window.show()
+
+    # Функция создающяя окно с настройками сервера.
+    def server_config():
+        global config_window
+        # Создаём окно и заносим в него текущие параметры
+        config_window = ConfigWindow()
+        config_window.db_path.insert(config['SETTINGS']['Database_path'])
+        config_window.db_file.insert(config['SETTINGS']['Database_file'])
+        config_window.port.insert(config['SETTINGS']['Default_port'])
+        config_window.ip.insert(config['SETTINGS']['Listen_Address'])
+        config_window.save_btn.clicked.connect(save_server_config)
+
+    # Функция сохранения настроек
+    def save_server_config():
+        global config_window
+        message = QMessageBox()
+        config['SETTINGS']['Database_path'] = config_window.db_path.text()
+        config['SETTINGS']['Database_file'] = config_window.db_file.text()
+        try:
+            port = int(config_window.port.text())
+        except ValueError:
+            message.warning(config_window, 'Ошибка', 'Порт должен быть числом')
         else:
-            print('Команда не распознана.')
+            config['SETTINGS']['Listen_Address'] = config_window.ip.text()
+            if 1023 < port < 65536:
+                config['SETTINGS']['Default_port'] = str(port)
+                print(port)
+                with open('server.ini', 'w') as conf:
+                    config.write(conf)
+                    message.information(
+                        config_window, 'OK', 'Настройки успешно сохранены!')
+            else:
+                message.warning(
+                    config_window,
+                    'Ошибка',
+                    'Порт должен быть от 1024 до 65536')
+
+    # Таймер, обновляющий список клиентов 1 раз в секунду
+    timer = QTimer()
+    timer.timeout.connect(list_update)
+    timer.start(1000)
+
+    # Связываем кнопки с процедурами
+    main_window.refresh_button.triggered.connect(list_update)
+    main_window.show_history_button.triggered.connect(show_statistics)
+    main_window.config_btn.triggered.connect(server_config)
+
+    # Запускаем GUI
+    server_app.exec_()
+
+    # print('Поддерживаемые комманды:')
+    # print('users - список известных пользователей')
+    # print('connected - список подключенных пользователей')
+    # print('loghist - история входов пользователя')
+    # print('messages - история сообщений')
+    # print('exit - завершение работы сервера.')
+    # print('help - вывод справки по поддерживаемым командам')
+    #
+    # while True:
+    #     command = input('Введите комманду: ')
+    #     if command == 'help':
+    #         print('Поддерживаемые комманды:')
+    #         print('users - список известных пользователей')
+    #         print('connected - список подключенных пользователей')
+    #         print('loghist - история входов пользователя')
+    #         print('messages - история сообщений')
+    #         print('exit - завершение работы сервера.')
+    #         print('help - вывод справки по поддерживаемым командам')
+    #     elif command == 'exit':
+    #         break
+    #     elif command == 'users':
+    #         for user in sorted(srv.db.list_clients()):
+    #             print(f'Пользователь {user[0]}, последний вход: {user[1]}')
+    #     elif command == 'connected':
+    #         for user in sorted(srv.db.list_clients_on_server()):
+    #             print(
+    #                 f'Пользователь {user[0]}, подключен: {user[1]}:{user[2]}, время установки соединения: {user[3]}')
+    #     elif command == 'loghist':
+    #         name = input(
+    #             'Введите имя пользователя для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
+    #         for user in sorted(srv.db.history_log_in(name)):
+    #             print(f'Пользователь: {user[0]} время входа: {user[1]}. Вход с: {user[2]}:{user[3]}')
+    #     elif command == 'messages':
+    #         name = input(
+    #             'Введите имя пользователя от которого отправлены сообщения для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
+    #         for user in sorted(srv.db.history_messages(name)):
+    #             print(f'Пользователь: {user[0]} отправил: {user[1]}  сообщение содержанием: {user[3]} в {user[2]}')
+    #     else:
+    #         print('Команда не распознана.')
 
 
 if __name__ == '__main__':

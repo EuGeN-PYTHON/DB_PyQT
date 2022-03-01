@@ -34,8 +34,22 @@ class ServerDB:
             self.date_time = date
             self.message = message
 
-    def __init__(self):
-        self.db = create_engine('sqlite:///db_server.db3', echo=False, pool_recycle=7200)
+    class UsersContacts:
+        def __init__(self, user, contact):
+            self.id = None
+            self.user = user
+            self.contact = contact
+
+    class UsersHistory:
+        def __init__(self, user):
+            self.id = None
+            self.user = user
+            self.sent = 0
+            self.accepted = 0
+
+    def __init__(self, path):
+        self.db = create_engine(f'sqlite:///{path}', echo=False, pool_recycle=7200,
+                                connect_args={'check_same_thread': False})
         self.metadata = MetaData()
 
         clients_table = Table('Clients', self.metadata,
@@ -68,12 +82,27 @@ class ServerDB:
                                  Column('message', String),
                                  )
 
+        contacts = Table('Contacts', self.metadata,
+                         Column('id', Integer, primary_key=True),
+                         Column('user', ForeignKey('Clients.id')),
+                         Column('contact', ForeignKey('Clients.id'))
+                         )
+
+        users_history_table = Table('History', self.metadata,
+                                    Column('id', Integer, primary_key=True),
+                                    Column('user', ForeignKey('Clients.id')),
+                                    Column('sent', Integer),
+                                    Column('accepted', Integer)
+                                    )
+
         self.metadata.create_all(self.db)
 
         mapper(self.Clients, clients_table)
         mapper(self.ClientsOnServer, clients_on_server)
         mapper(self.HistoryClients, history_clients)
         mapper(self.HistoryContacts, history_contacts)
+        mapper(self.UsersContacts, contacts)
+        mapper(self.UsersHistory, users_history_table)
 
         Session = sessionmaker(bind=self.db)
         self.session = Session()
@@ -91,6 +120,8 @@ class ServerDB:
             user = self.Clients(username)
             self.session.add(user)
             self.session.commit()
+            user_in_history = self.UsersHistory(user.id)
+            self.session.add(user_in_history)
 
         new_active_user = self.ClientsOnServer(user.id, ip, port, datetime.datetime.now())
         self.session.add(new_active_user)
@@ -106,6 +137,40 @@ class ServerDB:
 
         self.session.query(self.ClientsOnServer).filter_by(user=user.id).delete()
 
+        self.session.commit()
+
+    def process_message(self, sender, recipient):
+        sender = self.session.query(self.Clients).filter_by(name=sender).first().id
+        recipient = self.session.query(self.Clients).filter_by(name=recipient).first().id
+        sender_row = self.session.query(self.UsersHistory).filter_by(user=sender).first()
+        sender_row.sent += 1
+        recipient_row = self.session.query(self.UsersHistory).filter_by(user=recipient).first()
+        recipient_row.accepted += 1
+
+        self.session.commit()
+
+    def add_contact(self, user, contact):
+        user = self.session.query(self.Clients).filter_by(name=user).first()
+        contact = self.session.query(self.Clients).filter_by(name=contact).first()
+
+        if not contact or self.session.query(self.UsersContacts).filter_by(user=user.id, contact=contact.id).count():
+            return
+
+        contact_row = self.UsersContacts(user.id, contact.id)
+        self.session.add(contact_row)
+        self.session.commit()
+
+    def remove_contact(self, user, contact):
+        user = self.session.query(self.Users).filter_by(name=user).first()
+        contact = self.session.query(self.Users).filter_by(name=contact).first()
+
+        if not contact:
+            return
+
+        print(self.session.query(self.UsersContacts).filter(
+            self.UsersContacts.user == user.id,
+            self.UsersContacts.contact == contact.id
+        ).delete())
         self.session.commit()
 
     def send_to_user(self, from_user, to_user, message):
@@ -147,6 +212,23 @@ class ServerDB:
                                    )
         if username:
             query = query.filter(self.HistoryContacts.from_user == username)
+        return query.all()
+
+    def get_contacts(self, username):
+        user = self.session.query(self.Clients).filter_by(name=username).one()
+
+        query = self.session.query(self.UsersContacts, self.Clients.name).filter_by(user=user.id). \
+            join(self.Clients, self.UsersContacts.contact == self.Clients.id)
+
+        return [contact[1] for contact in query.all()]
+
+    def message_history(self):
+        query = self.session.query(
+            self.Clients.name,
+            self.Clients.last_login,
+            self.UsersHistory.sent,
+            self.UsersHistory.accepted
+        ).join(self.Clients)
         return query.all()
 
 
