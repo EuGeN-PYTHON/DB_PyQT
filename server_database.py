@@ -52,7 +52,7 @@ class ServerDB:
                                 connect_args={'check_same_thread': False})
         self.metadata = MetaData()
 
-        clients_table = Table('Clients', self.metadata,
+        clients_table = Table('AllClients', self.metadata,
                               Column('id', Integer, primary_key=True),
                               Column('name', String, unique=True),
                               Column('last_login', DateTime)
@@ -60,7 +60,7 @@ class ServerDB:
 
         clients_on_server = Table('Clients_online', self.metadata,
                                   Column('id', Integer, primary_key=True),
-                                  Column('user', ForeignKey('Clients.id'), unique=True),
+                                  Column('user', ForeignKey('AllClients.id'), unique=True),
                                   Column('ip', String),
                                   Column('port', Integer),
                                   Column('login_time', DateTime)
@@ -68,7 +68,7 @@ class ServerDB:
 
         history_clients = Table('Clients_history', self.metadata,
                                 Column('id', Integer, primary_key=True),
-                                Column('user', ForeignKey('Clients.id')),
+                                Column('user', ForeignKey('AllClients.id')),
                                 Column('date_time', DateTime),
                                 Column('ip', String),
                                 Column('port', String)
@@ -76,21 +76,21 @@ class ServerDB:
 
         history_contacts = Table('Clients_history_contacts', self.metadata,
                                  Column('id', Integer, primary_key=True),
-                                 Column('from_user', ForeignKey('Clients.name')),
-                                 Column('to_user', ForeignKey('Clients.name')),
+                                 Column('from_user', ForeignKey('AllClients.name')),
+                                 Column('to_user', ForeignKey('AllClients.name')),
                                  Column('date_time', DateTime),
                                  Column('message', String),
                                  )
 
         contacts = Table('Contacts', self.metadata,
                          Column('id', Integer, primary_key=True),
-                         Column('user', ForeignKey('Clients.id')),
-                         Column('contact', ForeignKey('Clients.id'))
+                         Column('user', ForeignKey('AllClients.id')),
+                         Column('contact', ForeignKey('AllClients.id'))
                          )
 
         users_history_table = Table('History', self.metadata,
                                     Column('id', Integer, primary_key=True),
-                                    Column('user', ForeignKey('Clients.id')),
+                                    Column('user', ForeignKey('AllClients.id')),
                                     Column('sent', Integer),
                                     Column('accepted', Integer)
                                     )
@@ -233,7 +233,8 @@ class ServerDB:
 
 
 if __name__ == '__main__':
-    server_db = ServerDB()
+    path = ''
+    server_db = ServerDB(path)
 
     server_db.log_in('sasha', '127.0.0.1', 8080)
     server_db.log_in('pasha', '127.0.0.10', 7777)

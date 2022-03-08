@@ -29,10 +29,8 @@ app_log = logging.getLogger('server_app')
 new_connection = False
 conflag_lock = threading.Lock()
 
-clients = []
-messages = []
 
-
+@Log()
 def arg_parser(default_port, default_address):
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', default=default_port, type=int, nargs='?')
@@ -45,24 +43,98 @@ def arg_parser(default_port, default_address):
 
 @Log()
 class Server(threading.Thread, metaclass=ServerVerifier):
-    conn = MAX_CONNECTIONS
     port = Port()
 
-    def __init__(self, db, conn=MAX_CONNECTIONS, port=DEFAULT_PORT):
-        self.conn = conn
-        self.port = port
-        self.db = db
+    def __init__(self, listen_address, listen_port, database):
+
+        self.addr = listen_address
+        self.port = listen_port
+        self.db = database
+        self.clients = []
+        self.messages = []
+        self.names = dict()
         super().__init__()
 
-    # @staticmethod
-    def check_data_client(self, msg, msg_lst, client, clients, name_soc):
+    def init_socket(self):
+        app_log.info(
+            f'Запущен сервер, порт для подключений: {self.port} , адрес с которого принимаются подключения: {self.addr}. Если адрес не указан, принимаются соединения с любых адресов.')
+        transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        transport.bind((self.addr, self.port))
+        transport.settimeout(0.5)
+
+        self.sock = transport
+        self.sock.listen()
+
+    def run(self):
+        self.init_socket()
+
+        while True:
+            try:
+                client, client_address = self.sock.accept()
+            except OSError:
+                pass
+            else:
+                app_log.info(f'Установлено соедение с ПК {client_address}')
+                self.clients.append(client)
+
+            recv_data_lst = []
+            send_data_lst = []
+            err_lst = []
+            try:
+                if self.clients:
+                    recv_data_lst, send_data_lst, err_lst = select.select(
+                        self.clients, self.clients, [], 0)
+            except OSError as err:
+                app_log.error(f'Ошибка работы с сокетами: {err}')
+
+            if recv_data_lst:
+                for client_with_message in recv_data_lst:
+                    try:
+                        self.check_data_client(
+                            get_message(client_with_message), client_with_message)
+                    except (OSError):
+                        app_log.info(
+                            f'Клиент {client_with_message.getpeername()} отключился от сервера.')
+                        for name in self.names:
+                            if self.names[name] == client_with_message:
+                                self.database.user_logout(name)
+                                del self.names[name]
+                                break
+                        self.clients.remove(client_with_message)
+
+            for message in self.messages:
+                try:
+                    self.process_message(message, send_data_lst)
+                except (ConnectionAbortedError, ConnectionError, ConnectionResetError, ConnectionRefusedError):
+                    app_log.info(
+                        f'Связь с клиентом с именем {message["to"]} была потеряна')
+                    self.clients.remove(self.names[message['to']])
+                    self.database.user_logout(message['to'])
+                    del self.names[message['to']]
+            self.messages.clear()
+
+    def process_message(self, message, listen_socks):
+
+        if message['to'] in self.names and self.names[message['to']] in listen_socks:
+            send_message(self.names[message['to']], message)
+            app_log.info(f'Отправлено сообщение пользователю {message["to"]} '
+                         f'от пользователя {message["from"]}.')
+        elif message["to"] in self.names and self.names[message["to"]] not in listen_socks:
+            raise ConnectionError
+        else:
+            app_log.error(
+                f'Пользователь {message["to"]} не зарегистрирован на сервере, '
+                f'отправка сообщения невозможна.')
+
+    def check_data_client(self, msg, client):
         global new_connection
-        app_log.debug(f'проверка сообщения от клиента: {msg}')
+        app_log.debug(f'проверка сообщения от клиента: {msg} с {self.names}')
+
         if 'action' in msg and msg['action'] == 'presence' and 'time' in msg and \
                 'user' in msg:
-            if msg['user']['account_name'] not in name_soc.keys():
+            if msg['user']['account_name'] not in self.names.keys():
                 # app_log.debug(f'Доходит или нет: {msg}')
-                name_soc[msg['user']['account_name']] = client
+                self.names[msg['user']['account_name']] = client
                 client_ip, client_port = client.getpeername()
                 self.db.log_in(msg['user']['account_name'], client_ip, client_port)
                 send_message(client, {'response': 200})
@@ -72,42 +144,44 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 send_message(client, {
                     'response': 400,
                     'error': 'Имя занято'})
-                clients.remove(client)
+                self.clients.remove(client)
                 client.close()
             return
         elif 'action' in msg and msg['action'] == 'message' and 'to' in msg \
                 and 'time' in msg and 'from' in msg and 'mess_text' in msg:
-            msg_lst.append(msg)
+            self.messages.append(msg)
             self.db.send_to_user(msg['from'], msg['to'], msg['mess_text'])
             self.db.process_message(msg['from'], msg['to'])
             return
         elif 'action' in msg and msg['action'] == 'exit' and 'account_name' in msg:
             self.db.log_out(msg['account_name'])
             app_log.info(f'Клиент {msg["account_name"]} корректно отключился от сервера.')
-            clients.remove(name_soc[msg['account_name']])
-            name_soc[msg['account_name']].close()
-            del name_soc[msg['account_name']]
+            self.clients.remove(self.names[msg['account_name']])
+            self.names[msg['account_name']].close()
+            del self.names[msg['account_name']]
             with conflag_lock:
                 new_connection = True
             return
         elif 'action' in msg and msg['action'] == 'get_contacts' and 'user' in msg and \
-                name_soc[msg['user']] == client:
-            response = {"response": 202, "data_list": None}
-            response["data_list"] = self.db.get_contacts(msg['user'])
+                self.names[msg['user']] == client:
+            response = {"response": 202, "data_list": self.db.get_contacts(msg['user'])}
             send_message(client, response)
         elif 'action' in msg and msg['action'] == 'add' and 'account_name' in msg and 'user' in msg \
-                and name_soc[msg['user']] == client:
+                and self.names[msg['user']] == client:
             self.db.add_contact(msg['user'], msg['account_name'])
             send_message(client, {'response': 200})
         elif 'action' in msg and msg['action'] == 'remove' and 'account_name' in msg and 'user' in msg \
-                and name_soc[msg['user']] == client:
+                and self.names[msg['user']] == client:
             self.db.remove_contact(msg['user'], msg['account_name'])
             send_message(client, {'response': 200})
-        elif 'action' in msg and msg['action'] == 'add' and 'account_name' in msg \
-                and name_soc[msg['user']] == client:
-            response = {"response": 202, "data_list": None}
-            response["data_list"] = [user[0] for user in self.db.list_clients()]
+        elif 'action' in msg and msg['action'] == 'get_users' and 'account_name' in msg \
+                and self.names[msg['account_name']] == client:
+            app_log.info(f'Вход в ГЕТ ЮЗ')
+            response = {"response": 202, "data_list": [user[0] for user in self.db.list_clients()]}
             send_message(client, response)
+        # 'action' in msg and msg['action'] == 'presence' and 'time' in msg and \
+        # 'user' in msg:
+
         else:
             send_message(client, {
                 'response': 400,
@@ -115,114 +189,102 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             })
             return
 
-    @staticmethod
-    def process_message(message, name_soc, listen_socks):
 
-        if message['to'] in name_soc and name_soc[message['to']] in listen_socks:
-            send_message(name_soc[message['to']], message)
-            app_log.info(f'Отправлено сообщение пользователю {message["to"]} '
-                         f'от пользователя {message["from"]}.')
-        elif message["to"] in name_soc and name_soc[message["to"]] not in listen_socks:
-            raise ConnectionError
-        else:
-            app_log.error(
-                f'Пользователь {message["to"]} не зарегистрирован на сервере, '
-                f'отправка сообщения невозможна.')
 
-    # @classmethod
-    def run(self):
-        # server.py -p 8079 -a 192.168.1.2
-        if '-a' in sys.argv:
-            listen_server = sys.argv[sys.argv.index('-a') + 1]
-        else:
-            listen_server = DEFAULT_IP_ADDRESS
-        if '-p' in sys.argv:
-            input_port = int(sys.argv[sys.argv.index('-p') + 1])
-        else:
-            input_port = DEFAULT_PORT
-        if input_port < 1024 or input_port > 65535:
-            app_log.critical(f'Невозможно войти с'
-                             f' номером порта: {input_port}. '
-                             f'Допустимы порты с 1024 до 65535. Прервано.')
-            sys.exit(1)
-        app_log.info(f'Запущен сервер с порта: {input_port}, сообщения принимаются с адреса: {listen_server}')
-
-        try:
-            if '-a' in sys.argv:
-                address_ip = listen_server
-            else:
-                address_ip = ''
-        except IndexError:
-            app_log.critical(
-                'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
-            sys.exit(1)
-
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((address_ip, input_port))
-        s.settimeout(0.5)
-        s.listen()
-
-        clients = []
-        messages = []
-
-        name_soc = dict()
-        # while True:
-        #     client, client_address = s.accept()
-        #     app_log.info(f'Установлено соедение с адресом: {client_address}')
-        #     try:
-        #         message_from_client = get_message(client)
-        #         app_log.debug(f'Получено сообщение {message_from_client}')
-        #         # print(message_from_client)
-        #         response = cls.check_data_client(message_from_client)
-        #         app_log.info(f'создан ответ {response}')
-        #         send_message(client, response)
-        #         client.close()
-        #         app_log.debug(f'Соединение с {client_address} закрыто.')
-        #     except (ValueError, json.JSONDecodeError):
-        #         app_log.error(f'Принято некорретное сообщение от клиента:{client_address}')
-        #         client.close()
-
-        while True:
-            try:
-                client, client_address = s.accept()
-            except OSError:
-                pass
-            else:
-                app_log.info(f'Установлено соедение с ПК {client_address}')
-                clients.append(client)
-
-            recv_data_lst = []
-            send_data_lst = []
-            err_lst = []
-            try:
-                if clients:
-                    recv_data_lst, send_data_lst, err_lst = select.select(clients, clients, [], 0)
-            except OSError:
-                pass
-            if recv_data_lst:
-                for client_with_message in recv_data_lst:
-                    try:
-                        self.check_data_client(get_message(client_with_message),
-                                               messages, client_with_message, clients, name_soc)
-                        app_log.info(f'Клиент {client_with_message.getpeername()} отправляет сообщение.')
-                    except:
-                        app_log.info(f'Клиент {client_with_message.getpeername()} '
-                                     f'отключился от сервера.')
-                        for name in name_soc:
-                            if name_soc[name] == client_with_message:
-                                self.db.log_out(name)
-                                del name_soc[name]
-                                break
-                        clients.remove(client_with_message)
-            for i in messages:
-                try:
-                    self.process_message(i, name_soc, send_data_lst)
-                except Exception:
-                    app_log.info(f"Связь с клиентом с именем {i['to']} была потеряна")
-                    clients.remove(name_soc[i['to']])
-                    self.db.log_out(i['to'])
-                    del name_soc[i['to']]
-            messages.clear()
+    # # @classmethod
+    # def run(self):
+    #     # server.py -p 8079 -a 192.168.1.2
+    #     if '-a' in sys.argv:
+    #         listen_server = sys.argv[sys.argv.index('-a') + 1]
+    #     else:
+    #         listen_server = DEFAULT_IP_ADDRESS
+    #     if '-p' in sys.argv:
+    #         input_port = int(sys.argv[sys.argv.index('-p') + 1])
+    #     else:
+    #         input_port = DEFAULT_PORT
+    #     if input_port < 1024 or input_port > 65535:
+    #         app_log.critical(f'Невозможно войти с'
+    #                          f' номером порта: {input_port}. '
+    #                          f'Допустимы порты с 1024 до 65535. Прервано.')
+    #         sys.exit(1)
+    #     app_log.info(f'Запущен сервер с порта: {input_port}, сообщения принимаются с адреса: {listen_server}')
+    #
+    #     try:
+    #         if '-a' in sys.argv:
+    #             address_ip = listen_server
+    #         else:
+    #             address_ip = ''
+    #     except IndexError:
+    #         app_log.critical(
+    #             'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
+    #         sys.exit(1)
+    #
+    #     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #     s.bind((address_ip, input_port))
+    #     s.settimeout(0.5)
+    #     s.listen()
+    #
+    #     clients = []
+    #     messages = []
+    #
+    #     name_soc = dict()
+    #     # while True:
+    #     #     client, client_address = s.accept()
+    #     #     app_log.info(f'Установлено соедение с адресом: {client_address}')
+    #     #     try:
+    #     #         message_from_client = get_message(client)
+    #     #         app_log.debug(f'Получено сообщение {message_from_client}')
+    #     #         # print(message_from_client)
+    #     #         response = cls.check_data_client(message_from_client)
+    #     #         app_log.info(f'создан ответ {response}')
+    #     #         send_message(client, response)
+    #     #         client.close()
+    #     #         app_log.debug(f'Соединение с {client_address} закрыто.')
+    #     #     except (ValueError, json.JSONDecodeError):
+    #     #         app_log.error(f'Принято некорретное сообщение от клиента:{client_address}')
+    #     #         client.close()
+    #
+    #     while True:
+    #         try:
+    #             client, client_address = s.accept()
+    #         except OSError:
+    #             pass
+    #         else:
+    #             app_log.info(f'Установлено соедение с ПК {client_address}')
+    #             clients.append(client)
+    #
+    #         recv_data_lst = []
+    #         send_data_lst = []
+    #         err_lst = []
+    #         try:
+    #             if clients:
+    #                 recv_data_lst, send_data_lst, err_lst = select.select(clients, clients, [], 0)
+    #         except OSError:
+    #             pass
+    #         if recv_data_lst:
+    #             for client_with_message in recv_data_lst:
+    #                 try:
+    #                     self.check_data_client(get_message(client_with_message),
+    #                                            messages, client_with_message, clients, name_soc)
+    #                     app_log.info(f'Клиент {client_with_message.getpeername()} отправляет сообщение.')
+    #                 except:
+    #                     app_log.info(f'Клиент {client_with_message.getpeername()} '
+    #                                  f'отключился от сервера.')
+    #                     for name in name_soc:
+    #                         if name_soc[name] == client_with_message:
+    #                             self.db.log_out(name)
+    #                             del name_soc[name]
+    #                             break
+    #                     clients.remove(client_with_message)
+    #         for i in messages:
+    #             try:
+    #                 self.process_message(i, name_soc, send_data_lst)
+    #             except Exception:
+    #                 app_log.info(f"Связь с клиентом с именем {i['to']} была потеряна")
+    #                 clients.remove(name_soc[i['to']])
+    #                 self.db.log_out(i['to'])
+    #                 del name_soc[i['to']]
+    #         messages.clear()
 
             # if messages and send_data_lst:
             #     message = {
@@ -246,16 +308,16 @@ def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     config.read(f"{dir_path}/{'server.ini'}")
 
-    # listen_address, listen_port = arg_parser(
-    #     config['SETTINGS']['Default_port'], config['SETTINGS']['Listen_Address'])
+    listen_address, listen_port = arg_parser(
+        config['SETTINGS']['Default_port'], config['SETTINGS']['Listen_Address'])
 
     database = ServerDB(
         os.path.join(
             config['SETTINGS']['Database_path'],
             config['SETTINGS']['Database_file']))
 
-    db = ServerDB(database)
-    srv = Server(db)
+    # db = ServerDB(database)
+    srv = Server(listen_address, listen_port, database)
     srv.daemon = True
     srv.start()
 

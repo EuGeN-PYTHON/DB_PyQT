@@ -8,7 +8,7 @@ import os
 
 # GUI - Создание таблицы QModel, для отображения в окне программы.
 def gui_create_model(database):
-    list_users = database.active_users_list() #список активных юзеров
+    list_users = database.list_clients_on_server() #список активных юзеров
     list_ = QStandardItemModel() #Это начинка то что я вставля в главную форму(можно сказать нашу разметку) QTableView
     list_.setHorizontalHeaderLabels(['Имя Клиента', 'IP Адрес', 'Порт', 'Время подключения'])
     for row in list_users:

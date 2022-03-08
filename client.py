@@ -324,13 +324,17 @@ def add_contact(sock, username, contact):
 
 def user_list_request(sock, username):
     client_log.debug(f'Запрос списка известных пользователей {username}')
+    print(username)
     req = {
         'action': 'get_users',
         'time': time.time(),
         'account_name': username
     }
+    print(req)
     send_message(sock, req)
+    print('send')
     ans = get_message(sock)
+    print(ans)
     if 'response' in ans and ans['response'] == 202:
         return ans['data_list']
     else:
