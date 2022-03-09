@@ -111,7 +111,7 @@ class ServerDB:
         self.session.commit()
 
     def log_in(self, username, ip, port):
-        print(username, ip, port)
+        # print(username, ip, port)
         users_query = self.session.query(self.Clients).filter_by(name=username)
         if users_query.count():
             user = users_query.first()

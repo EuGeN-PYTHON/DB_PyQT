@@ -66,6 +66,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
         self.sock.listen()
 
     def run(self):
+        global new_connection
         self.init_socket()
 
         while True:
@@ -148,12 +149,16 @@ class Server(threading.Thread, metaclass=ServerVerifier):
                 client.close()
             return
         elif 'action' in msg and msg['action'] == 'message' and 'to' in msg \
-                and 'time' in msg and 'from' in msg and 'mess_text' in msg:
-            self.messages.append(msg)
-            self.db.send_to_user(msg['from'], msg['to'], msg['mess_text'])
-            self.db.process_message(msg['from'], msg['to'])
+                and 'time' in msg and 'from' in msg and 'mess_text' in msg \
+                and self.names[msg['from']] == client:
+            if msg['to'] in self.names:
+                self.messages.append(msg)
+                self.db.process_message(msg['from'], msg['to'])
+                self.db.send_to_user(msg['from'], msg['to'], msg['mess_text'])
+                send_message(client, {'response': 200})
             return
-        elif 'action' in msg and msg['action'] == 'exit' and 'account_name' in msg:
+        elif 'action' in msg and msg['action'] == 'exit' and 'account_name' in msg\
+                and self.names[msg['account_name']] == client:
             self.db.log_out(msg['account_name'])
             app_log.info(f'Клиент {msg["account_name"]} корректно отключился от сервера.')
             self.clients.remove(self.names[msg['account_name']])
@@ -162,6 +167,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             with conflag_lock:
                 new_connection = True
             return
+
         elif 'action' in msg and msg['action'] == 'get_contacts' and 'user' in msg and \
                 self.names[msg['user']] == client:
             response = {"response": 202, "data_list": self.db.get_contacts(msg['user'])}
@@ -176,7 +182,7 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             send_message(client, {'response': 200})
         elif 'action' in msg and msg['action'] == 'get_users' and 'account_name' in msg \
                 and self.names[msg['account_name']] == client:
-            app_log.info(f'Вход в ГЕТ ЮЗ')
+            # app_log.info(f'Вход в ГЕТ ЮЗ')
             response = {"response": 202, "data_list": [user[0] for user in self.db.list_clients()]}
             send_message(client, response)
         # 'action' in msg and msg['action'] == 'presence' and 'time' in msg and \
@@ -301,12 +307,22 @@ class Server(threading.Thread, metaclass=ServerVerifier):
             #             app_log.info(f'Клиент {waiting_client.getpeername()} отключился от сервера.')
             #             clients.remove(waiting_client)
 
-
-def main():
+def config_load():
     config = configparser.ConfigParser()
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
     config.read(f"{dir_path}/{'server.ini'}")
+    if 'SETTINGS' in config:
+        return config
+    else:
+        config.add_section('SETTINGS')
+        config.set('SETTINGS', 'Default_port', str(DEFAULT_PORT))
+        config.set('SETTINGS', 'Listen_Address', '')
+        config.set('SETTINGS', 'Database_path', '')
+        config.set('SETTINGS', 'Database_file', 'server_database.db3')
+        return config
+
+def main():
+    config = config_load()
 
     listen_address, listen_port = arg_parser(
         config['SETTINGS']['Default_port'], config['SETTINGS']['Listen_Address'])
@@ -316,7 +332,6 @@ def main():
             config['SETTINGS']['Database_path'],
             config['SETTINGS']['Database_file']))
 
-    # db = ServerDB(database)
     srv = Server(listen_address, listen_port, database)
     srv.daemon = True
     srv.start()
