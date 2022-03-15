@@ -2,7 +2,7 @@ import logging
 import sys
 import os
 
-from log.server_log_config import stream_handler
+from logs.server_log_config import stream_handler
 
 sys.path.append(os.path.join(os.getcwd(), '..'))
 
