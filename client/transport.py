@@ -7,9 +7,9 @@ import threading
 from PyQt5.QtCore import pyqtSignal, QObject
 
 sys.path.append('../')
-from common.utils import *
-from common.variables import *
-from common.errors import ServerError
+from base_commands import *
+from variables import *
+from errors import ServerError
 
 # Логер и объект блокировки для работы с сокетом.
 logger = logging.getLogger('client')
@@ -93,13 +93,13 @@ class ClientTransport(threading.Thread, QObject):
     # Функция, генерирующая приветственное сообщение для сервера
     def create_presence(self):
         out = {
-            ACTION: PRESENCE,
-            TIME: time.time(),
-            USER: {
-                ACCOUNT_NAME: self.username
+            'action': 'presence',
+            'time': time.time(),
+            'user': {
+                'account_name': self.username
             }
         }
-        logger.debug(f'Сформировано {PRESENCE} сообщение для пользователя {self.username}')
+        logger.debug(f'Сформировано {"presence"} сообщение для пользователя {self.username}')
         return out
 
     # Функция обрабатывающяя сообщения от сервера. Ничего не возращает. Генерирует исключение при ошибке.
@@ -107,37 +107,37 @@ class ClientTransport(threading.Thread, QObject):
         logger.debug(f'Разбор сообщения от сервера: {message}')
 
         # Если это подтверждение чего-либо
-        if RESPONSE in message:
-            if message[RESPONSE] == 200:
+        if 'response' in message:
+            if message['response'] == 200:
                 return
-            elif message[RESPONSE] == 400:
-                raise ServerError(f'{message[ERROR]}')
+            elif message['response'] == 400:
+                raise ServerError(f'{message["error"]}')
             else:
-                logger.debug(f'Принят неизвестный код подтверждения {message[RESPONSE]}')
+                logger.debug(f'Принят неизвестный код подтверждения {message["response"]}')
 
         # Если это сообщение от пользователя добавляем в базу, даём сигнал о новом сообщении
-        elif ACTION in message and message[ACTION] == MESSAGE and SENDER in message and DESTINATION in message \
-                and MESSAGE_TEXT in message and message[DESTINATION] == self.username:
-            logger.debug(f'Получено сообщение от пользователя {message[SENDER]}:{message[MESSAGE_TEXT]}')
-            self.database.save_message(message[SENDER] , 'in' , message[MESSAGE_TEXT])
-            self.new_message.emit(message[SENDER])
+        elif 'action' in message and message['action'] == 'message' and 'from' in message and 'to' in message \
+                and 'mess_text' in message and message['to'] == self.username:
+            logger.debug(f'Получено сообщение от пользователя {message["from"]}:{message["mess_text"]}')
+            self.database.save_message(message['from'] , 'in' , message['mess_text'])
+            self.new_message.emit(message['from'])
 
 
     # Функция обновляющая контакт - лист с сервера
     def contacts_list_update(self):
         logger.debug(f'Запрос контакт листа для пользователся {self.name}')
         req = {
-            ACTION: GET_CONTACTS,
-            TIME: time.time(),
-            USER: self.username
+            'action': 'get_contacts',
+            'time': time.time(),
+            'user': self.username
         }
         logger.debug(f'Сформирован запрос {req}')
         with socket_lock:
             send_message(self.transport, req)
             ans = get_message(self.transport)
         logger.debug(f'Получен ответ {ans}')
-        if RESPONSE in ans and ans[RESPONSE] == 202:
-            for contact in ans[LIST_INFO]:
+        if 'response' in ans and ans['response'] == 202:
+            for contact in ans['data_list']:
                 self.database.add_contact(contact)
         else:
             logger.error('Не удалось обновить список контактов.')
@@ -146,15 +146,15 @@ class ClientTransport(threading.Thread, QObject):
     def user_list_update(self):
         logger.debug(f'Запрос списка известных пользователей {self.username}')
         req = {
-            ACTION: USERS_REQUEST,
-            TIME: time.time(),
-            ACCOUNT_NAME: self.username
+            'action': 'get_users',
+            'time': time.time(),
+            'account_name': self.username
         }
         with socket_lock:
             send_message(self.transport, req)
             ans = get_message(self.transport)
-        if RESPONSE in ans and ans[RESPONSE] == 202:
-            self.database.add_users(ans[LIST_INFO])
+        if 'response' in ans and ans['response'] == 202:
+            self.database.add_users(ans['data_list'])
         else:
             logger.error('Не удалось обновить список известных пользователей.')
 
@@ -162,10 +162,10 @@ class ClientTransport(threading.Thread, QObject):
     def add_contact(self, contact):
         logger.debug(f'Создание контакта {contact}')
         req = {
-            ACTION: ADD_CONTACT,
-            TIME: time.time(),
-            USER: self.username,
-            ACCOUNT_NAME: contact
+            'action': 'add_contact',
+            'time': time.time(),
+            'user': self.username,
+            'account_name': contact
         }
         with socket_lock:
             send_message(self.transport, req)
@@ -175,10 +175,10 @@ class ClientTransport(threading.Thread, QObject):
     def remove_contact(self, contact):
         logger.debug(f'Удаление контакта {contact}')
         req = {
-            ACTION: REMOVE_CONTACT,
-            TIME: time.time(),
-            USER: self.username,
-            ACCOUNT_NAME: contact
+            'action': 'remove',
+            'time': time.time(),
+            'user': self.username,
+            'account_name': contact
         }
         with socket_lock:
             send_message(self.transport, req)
@@ -188,9 +188,9 @@ class ClientTransport(threading.Thread, QObject):
     def transport_shutdown(self):
         self.running = False
         message = {
-            ACTION: EXIT,
-            TIME: time.time(),
-            ACCOUNT_NAME: self.username
+            'action': 'exit',
+            'time': time.time(),
+            'account_name': self.username
         }
         with socket_lock:
             try:
@@ -203,11 +203,11 @@ class ClientTransport(threading.Thread, QObject):
     # Функция отправки сообщения на сервер
     def send_message(self, to, message):
         message_dict = {
-            ACTION: MESSAGE,
-            SENDER: self.username,
-            DESTINATION: to,
-            TIME: time.time(),
-            MESSAGE_TEXT: message
+            'action': 'message',
+            'from': self.username,
+            'to': to,
+            'time': time.time(),
+            'mess_text': message
         }
         logger.debug(f'Сформирован словарь сообщения: {message_dict}')
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import mapper, sessionmaker
 import os
 import sys
 sys.path.append('../')
-from common.variables import *
+from variables import *
 import datetime
 
 

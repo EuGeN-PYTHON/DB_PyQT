@@ -12,7 +12,7 @@ from client.del_contact import DelContactDialog
 from client.database import ClientDatabase
 from client.transport import ClientTransport
 from client.start_dialog import UserNameDialog
-from common.errors import ServerError
+from errors import ServerError
 
 logger = logging.getLogger('client')
 
