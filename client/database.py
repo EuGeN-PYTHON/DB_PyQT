@@ -1,9 +1,7 @@
 import datetime
-from common.variables import *
 from sqlalchemy import create_engine, Table, Column, Integer, String, Text, MetaData, DateTime
 from sqlalchemy.orm import mapper, sessionmaker
 import os
-
 
 
 class ClientDatabase:
@@ -12,10 +10,12 @@ class ClientDatabase:
     Использует SQLite базу данных, реализован с помощью
     SQLAlchemy ORM и используется классический подход.
     '''
+
     class KnownUsers:
         '''
         Класс - отображение для таблицы всех пользователей.
         '''
+
         def __init__(self, user):
             self.id = None
             self.username = user
@@ -24,6 +24,7 @@ class ClientDatabase:
         '''
         Класс - отображение для таблицы статистики переданных сообщений.
         '''
+
         def __init__(self, contact, direction, message):
             self.id = None
             self.contact = contact
@@ -35,6 +36,7 @@ class ClientDatabase:
         '''
         Класс - отображение для таблицы контактов.
         '''
+
         def __init__(self, contact):
             self.id = None
             self.name = contact
@@ -100,7 +102,7 @@ class ClientDatabase:
         '''Метод добавляющий контакт в базу данных.'''
         if not self.session.query(
                 self.Contacts).filter_by(
-                name=contact).count():
+            name=contact).count():
             contact_row = self.Contacts(contact)
             self.session.add(contact_row)
             self.session.commit()
@@ -141,7 +143,7 @@ class ClientDatabase:
         '''Метод проверяющий существует ли пользователь.'''
         if self.session.query(
                 self.KnownUsers).filter_by(
-                username=user).count():
+            username=user).count():
             return True
         else:
             return False
@@ -171,8 +173,10 @@ if __name__ == '__main__':
     #    test_db.add_contact(i)
     # test_db.add_contact('test4')
     # test_db.add_users(['test1', 'test2', 'test3', 'test4', 'test5'])
-    # test_db.save_message('test2', 'in', f'Привет! я тестовое сообщение от {datetime.datetime.now()}!')
-    # test_db.save_message('test2', 'out', f'Привет! я другое тестовое сообщение от {datetime.datetime.now()}!')
+    # test_db.save_message('test2', 'in', f'Привет!
+    # я тестовое сообщение от {datetime.datetime.now()}!')
+    # test_db.save_message('test2', 'out', f'Привет!
+    # я другое тестовое сообщение от {datetime.datetime.now()}!')
     # print(test_db.get_contacts())
     # print(test_db.get_users())
     # print(test_db.check_user('test1'))
