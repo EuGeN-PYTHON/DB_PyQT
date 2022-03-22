@@ -1,183 +1,103 @@
-import socket
 import sys
-import json
-import logging
 import os
-import select
-import time
+import argparse
+import logging
+import configparser
+import logs.config_server_log
+from common.utils import *
+from common.decos import log
+from server.core import MessageProcessor
+from server.database import ServerStorage
+from server.main_window import MainWindow
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
 
-from variables import MAX_CONNECTIONS, DEFAULT_PORT, DEFAULT_IP_ADDRESS
-from base_commands import get_message, send_message
-from log_deco import Log
-
-# sys.path.append(os.path.join(os.getcwd(), '..'))
-from log import server_log_config
-
-app_log = logging.getLogger('server_app')
-
-clients = []
-messages = []
+# Инициализация логирования сервера.
+logger = logging.getLogger('server')
 
 
-@Log()
-class Server:
-    conn = MAX_CONNECTIONS
-    port = DEFAULT_PORT
+@log
+def arg_parser(default_port, default_address):
+    '''Парсер аргументов коммандной строки.'''
+    logger.debug(
+        f'Инициализация парсера аргументов коммандной строки: {sys.argv}')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', default=default_port, type=int, nargs='?')
+    parser.add_argument('-a', default=default_address, nargs='?')
+    parser.add_argument('--no_gui', action='store_true')
+    namespace = parser.parse_args(sys.argv[1:])
+    listen_address = namespace.a
+    listen_port = namespace.p
+    gui_flag = namespace.no_gui
+    logger.debug('Аргументы успешно загружены.')
+    return listen_address, listen_port, gui_flag
 
-    def __init__(self, conn=conn, port=port):
-        self.conn = conn
-        self.port = port
 
-    @staticmethod
-    def check_data_client(msg, msg_lst, client, clients, name_soc):
-        app_log.debug(f'проверка сообщения от клиента: {msg}')
-        if 'action' in msg and msg['action'] == 'presence' and 'time' in msg and \
-                'user' in msg:
-            if msg['user']['account_name'] not in name_soc.keys():
-                name_soc[msg['user']['account_name']] = client
-                send_message(client, {'response': 200})
-            else:
-                send_message(client, {
-                    'response': 400,
-                    'error': 'Имя занято'})
-                clients.remove(client)
-                client.close()
-            return
-        elif 'action' in msg and msg['action'] == 'message' and 'to' in msg \
-                and 'time' in msg and 'from' in msg and 'mess_text' in msg:
-            msg_lst.append(msg)
-            return
-        elif 'action' in msg and msg['action'] == 'exit' and 'account_name' in msg:
-            clients.remove(name_soc[msg['account_name']])
-            name_soc[msg['account_name']].close()
-            del name_soc[msg['account_name']]
-            return
-        else:
-            send_message(client, {
-                'response': 400,
-                'error': 'Запрос не корректен'
-            })
-            return
+@log
+def config_load():
+    '''Парсер конфигурационного ini файла.'''
+    config = configparser.ConfigParser()
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    config.read(f"{dir_path}/{'server.ini'}")
+    # Если конфиг файл загружен правильно, запускаемся, иначе конфиг по
+    # умолчанию.
+    if 'SETTINGS' in config:
+        return config
+    else:
+        config.add_section('SETTINGS')
+        config.set('SETTINGS', 'Default_port', str(DEFAULT_PORT))
+        config.set('SETTINGS', 'Listen_Address', '')
+        config.set('SETTINGS', 'Database_path', '')
+        config.set('SETTINGS', 'Database_file', 'server_database.db3')
+        return config
 
-    @staticmethod
-    def process_message(message, name_soc, listen_socks):
 
-        if message['to'] in name_soc and name_soc[message['to']] in listen_socks:
-            send_message(name_soc[message['to']], message)
-            app_log.info(f'Отправлено сообщение пользователю {message["to"]} '
-                         f'от пользователя {message["from"]}.')
-        elif message["to"] in name_soc and name_soc[message["to"]] not in listen_socks:
-            raise ConnectionError
-        else:
-            app_log.error(
-                f'Пользователь {message["to"]} не зарегистрирован на сервере, '
-                f'отправка сообщения невозможна.')
+@log
+def main():
+    '''Основная функция'''
+    # Загрузка файла конфигурации сервера
+    config = config_load()
 
-    @classmethod
-    def base(cls):
-        # server.py -p 8079 -a 192.168.1.2
-        if '-a' in sys.argv:
-            listen_server = sys.argv[sys.argv.index('-a') + 1]
-        else:
-            listen_server = DEFAULT_IP_ADDRESS
-        if '-p' in sys.argv:
-            input_port = int(sys.argv[sys.argv.index('-p') + 1])
-        else:
-            input_port = DEFAULT_PORT
-        if input_port < 1024 or input_port > 65535:
-            app_log.critical(f'Невозможно войти с'
-                             f' номером порта: {input_port}. '
-                             f'Допустимы порты с 1024 до 65535. Прервано.')
-            sys.exit(1)
-        app_log.info(f'Запущен сервер с порта: {input_port}, сообщения принимаются с адреса: {listen_server}')
+    # Загрузка параметров командной строки, если нет параметров, то задаём
+    # значения по умоланию.
+    listen_address, listen_port, gui_flag = arg_parser(
+        config['SETTINGS']['Default_port'], config['SETTINGS']['Listen_Address'])
 
-        try:
-            if '-a' in sys.argv:
-                address_ip = listen_server
-            else:
-                address_ip = ''
-        except IndexError:
-            app_log.critical(
-                'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
-            sys.exit(1)
+    # Инициализация базы данных
+    database = ServerStorage(
+        os.path.join(
+            config['SETTINGS']['Database_path'],
+            config['SETTINGS']['Database_file']))
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((address_ip, input_port))
-        s.settimeout(0.5)
-        s.listen(MAX_CONNECTIONS)
+    # Создание экземпляра класса - сервера и его запуск:
+    server = MessageProcessor(listen_address, listen_port, database)
+    server.daemon = True
+    server.start()
 
-        clients = []
-        messages = []
-
-        name_soc = dict()
-        # while True:
-        #     client, client_address = s.accept()
-        #     app_log.info(f'Установлено соедение с адресом: {client_address}')
-        #     try:
-        #         message_from_client = get_message(client)
-        #         app_log.debug(f'Получено сообщение {message_from_client}')
-        #         # print(message_from_client)
-        #         response = cls.check_data_client(message_from_client)
-        #         app_log.info(f'создан ответ {response}')
-        #         send_message(client, response)
-        #         client.close()
-        #         app_log.debug(f'Соединение с {client_address} закрыто.')
-        #     except (ValueError, json.JSONDecodeError):
-        #         app_log.error(f'Принято некорретное сообщение от клиента:{client_address}')
-        #         client.close()
-
+    # Если  указан параметр без GUI то запускаем простенький обработчик
+    # консольного ввода
+    if gui_flag:
         while True:
-            try:
-                client, client_address = s.accept()
-            except OSError:
-                pass
-            else:
-                app_log.info(f'Установлено соедение с ПК {client_address}')
-                clients.append(client)
+            command = input('Введите exit для завершения работы сервера.')
+            if command == 'exit':
+                # Если выход, то завршаем основной цикл сервера.
+                server.running = False
+                server.join()
+                break
 
-            recv_data_lst = []
-            send_data_lst = []
-            err_lst = []
-            try:
-                if clients:
-                    recv_data_lst, send_data_lst, err_lst = select.select(clients, clients, [], 0)
-            except OSError:
-                pass
-            if recv_data_lst:
-                for client_with_message in recv_data_lst:
-                    try:
-                        cls.check_data_client(get_message(client_with_message),
-                                              messages, client_with_message, clients, name_soc)
-                        app_log.info(f'Клиент {client_with_message.getpeername()} отправляет сообщение.')
-                    except:
-                        app_log.info(f'Клиент {client_with_message.getpeername()} '
-                                     f'отключился от сервера.')
-                        clients.remove(client_with_message)
-            for i in messages:
-                try:
-                    cls.process_message(i, name_soc, send_data_lst)
-                except Exception:
-                    app_log.info(f"Связь с клиентом с именем {i['to']} была потеряна")
-                    clients.remove(name_soc[i['to']])
-                    del name_soc[i['to']]
-            messages.clear()
+    # Если не указан запуск без GUI, то запускаем GUI:
+    else:
+        # Создаём графическое окуружение для сервера:
+        server_app = QApplication(sys.argv)
+        server_app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
+        main_window = MainWindow(database, server, config)
 
-            # if messages and send_data_lst:
-            #     message = {
-            #         'action': 'message',
-            #         'sender': messages[0][0],
-            #         'time': time.time(),
-            #         'mess_text': messages[0][1]
-            #     }
-            #     del messages[0]
-            #     for waiting_client in send_data_lst:
-            #         try:
-            #             send_message(waiting_client, message)
-            #         except:
-            #             app_log.info(f'Клиент {waiting_client.getpeername()} отключился от сервера.')
-            #             clients.remove(waiting_client)
+        # Запускаем GUI
+        server_app.exec_()
+
+        # По закрытию окон останавливаем обработчик сообщений
+        server.running = False
 
 
 if __name__ == '__main__':
-    srv = Server()
-    srv.base()
+    main()

@@ -1,2 +1,5 @@
 .gitattributes
 .idea
+db_server.db3
+env
+hw

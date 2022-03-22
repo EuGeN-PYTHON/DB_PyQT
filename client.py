@@ -1,197 +1,118 @@
 import logging
+import logs.config_client_log
+import argparse
 import sys
-import json
-import socket
-import threading
-import time
 import os
+from Cryptodome.PublicKey import RSA
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from variables import DEFAULT_IP_ADDRESS, DEFAULT_PORT
-from log_deco import Log
-from base_commands import get_message, send_message
+from common.variables import *
+from common.errors import ServerError
+from common.decos import log
+from client.database import ClientDatabase
+from client.transport import ClientTransport
+from client.main_window import ClientMainWindow
+from client.start_dialog import UserNameDialog
 
-# sys.path.append(os.path.join(os.getcwd(), '..'))
-from log import client_log_config
-
-client_log = logging.getLogger('client_app')
-
-
-@Log()
-class Client:
-    host = DEFAULT_IP_ADDRESS
-    port = DEFAULT_PORT
-
-    def __init__(self, host=host, port=port):
-        self.host = host
-        self.port = port
-
-    @staticmethod
-    def leave_message(account_name):
-        return {
-            'action': 'exit',
-            'time': time.time(),
-            'account_name': account_name
-        }
-
-    @staticmethod
-    def message_from_server(s, username):
-        while True:
-            try:
-                message = get_message(s)
-                if 'action' in message and message['action'] == 'message' and \
-                        'from' in message and 'to' in message and 'mess_text' in message \
-                        and message['to'] == username:
-                    print(f"Получено сообщение от пользователя {message['from']}:\n{message['mess_text']}")
-                    client_log.info(f"Получено сообщение от пользователя {message['from']}:\n{message['mess_text']}")
-                else:
-                    client_log.error(f'Получено некорректное сообщение с сервера: {message}')
-            except (OSError, ConnectionError, ConnectionAbortedError,
-                    ConnectionResetError, json.JSONDecodeError):
-                client_log.critical(f'Потеряно соединение с сервером.')
-                break
-
-    @staticmethod
-    def create_message(sock, account_name='Guest'):
-        to_user = input('Введите адресата: ')
-        message = input('Введите сообщение для отправки: ')
-        message_dict = {
-            'action': 'message',
-            'from': account_name,
-            'to': to_user,
-            'time': time.time(),
-            'mess_text': message
-        }
-        client_log.debug(f'Сформирован словарь сообщения: {message_dict}')
-        try:
-            send_message(sock, message_dict)
-            client_log.info(f'Отправлено сообщение для пользователя {to_user}')
-        except:
-            client_log.critical('Потеряно соединение с сервером.')
-            sys.exit(1)
-
-    @classmethod
-    def send_proc(cls, sock, username):
-        print('Поддерживаемые команды:')
-        print('message - отправить сообщение. Кому и текст будет запрошены отдельно.')
-        print('help - вывести подсказки по командам')
-        print('exit - выход из программы')
-        while True:
-            command = input('Введите команду: ')
-            if command == 'message':
-                cls.create_message(sock, username)
-            elif command == 'help':
-                print('Поддерживаемые команды:')
-                print('message - отправить сообщение. Кому и текст будет запрошены отдельно.')
-                print('help - вывести подсказки по командам')
-                print('exit - выход из программы')
-            elif command == 'exit':
-                send_message(sock, cls.leave_message(username))
-                print('Завершение соединения.')
-                client_log.info('Завершение работы по команде пользователя.')
-                time.sleep(0.5)
-                break
-            else:
-                print('Команда не распознана, попробойте снова. help - вывести поддерживаемые команды.')
-
-    @staticmethod
-    def get_presence(account_name='Guest'):
-        data = {
-            'action': 'presence',
-            'time': time.time(),
-            'user': {
-                'account_name': account_name
-            }
-        }
-        client_log.debug(f'Создано сообщение presence для пользователя: {account_name}')
-        return data
-
-    @staticmethod
-    def response_analyze(msg):
-        client_log.debug(f'Соответствие сообщения от сервера: {msg}')
-        if 'response' in msg:
-            if msg['response'] == 200:
-                return '200 : OK'
-            return f'400 : {msg["error"]}'
-        raise ValueError
-
-    @classmethod
-    def base(cls):
-        # client.py -a 192.168.1.2 -p 8079 -n username
-
-        if '-a' in sys.argv:
-            server_address = sys.argv[sys.argv.index('-a') + 1]
-        else:
-            server_address = DEFAULT_IP_ADDRESS
-        if '-p' in sys.argv:
-            server_port = int(sys.argv[sys.argv.index('-p') + 1])
-        else:
-            server_port = DEFAULT_PORT
-        if '-n' in sys.argv:
-            client_name = sys.argv[sys.argv.index('-n') + 1]
-        else:
-            client_name = input('Введите имя пользователя: ')
-
-        if server_port < 1024 or server_port > 65535:
-            client_log.critical(f'Невозможно войти с'
-                                f' номером порта: {server_port}. '
-                                f'Допустимы порты с 1024 до 65535. Прервано.')
-            sys.exit(1)
-
-        client_log.info(f'Запущен клиент с парам.: {server_address}, порт: {server_port}')
-
-        try:
-
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((server_address, server_port))
-            message_to_server = cls.get_presence(client_name)
-            send_message(s, message_to_server)
-            answer = cls.response_analyze(get_message(s))
-            client_log.info(f'Принят ответ от сервера {answer}')
-            # print(answer)
-        except json.JSONDecodeError:
-            client_log.error('Не удалось декодировать полученную Json строку.')
-            sys.exit(1)
-        except ConnectionRefusedError:
-            client_log.critical(
-                f'Не удалось подключиться к серверу {server_address}:{server_port}, '
-                f'конечный компьютер отверг запрос на подключение.')
-            sys.exit(1)
-        else:
-            listen_proc = threading.Thread(target=cls.message_from_server, args=(s, client_name))
-            listen_proc.daemon = True
-            listen_proc.start()
-
-            send_proc = threading.Thread(target=cls.send_proc, args=(s, client_name))
-            send_proc.daemon = True
-            send_proc.start()
-            client_log.debug('Процессы запущены')
-
-            while True:
-                time.sleep(1)
-                if listen_proc.is_alive() and send_proc.is_alive():
-                    continue
-                break
-
-            # if client_mode == 'send':
-            #     print('Режим работы - отправка сообщений.')
-            # else:
-            #     print('Режим работы - приём сообщений.')
-            # while True:
-            #     if client_mode == 'send':
-            #         try:
-            #             send_message(s, cls.create_message(s))
-            #         except (ConnectionResetError, ConnectionError, ConnectionAbortedError):
-            #             client_log.error(f'Соединение с сервером {server_address} было потеряно.')
-            #             sys.exit(1)
-            #
-            #     if client_mode == 'listen':
-            #         try:
-            #             cls.message_from_server(get_message(s))
-            #         except (ConnectionResetError, ConnectionError, ConnectionAbortedError):
-            #             client_log.error(f'Соединение с сервером {server_address} было потеряно.')
-            #             sys.exit(1)
+# Инициализация клиентского логера
+logger = logging.getLogger('client')
 
 
+# Парсер аргументов коммандной строки
+@log
+def arg_parser():
+    '''
+    Парсер аргументов командной строки, возвращает кортеж из 4 элементов
+    адрес сервера, порт, имя пользователя, пароль.
+    Выполняет проверку на корректность номера порта.
+    '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument('addr', default=DEFAULT_IP_ADDRESS, nargs='?')
+    parser.add_argument('port', default=DEFAULT_PORT, type=int, nargs='?')
+    parser.add_argument('-n', '--name', default=None, nargs='?')
+    parser.add_argument('-p', '--password', default='', nargs='?')
+    namespace = parser.parse_args(sys.argv[1:])
+    server_address = namespace.addr
+    server_port = namespace.port
+    client_name = namespace.name
+    client_passwd = namespace.password
+
+    # проверим подходящий номер порта
+    if not 1023 < server_port < 65536:
+        logger.critical(
+            f'Попытка запуска клиента с неподходящим номером порта: {server_port}. Допустимы адреса с 1024 до 65535. Клиент завершается.')
+        exit(1)
+
+    return server_address, server_port, client_name, client_passwd
+
+
+# Основная функция клиента
 if __name__ == '__main__':
-    clnt = Client()
-    clnt.base()
+    # Загружаем параметы коммандной строки
+    server_address, server_port, client_name, client_passwd = arg_parser()
+    logger.debug('Args loaded')
+
+    # Создаём клиентокое приложение
+    client_app = QApplication(sys.argv)
+
+    # Если имя пользователя не было указано в командной строке то запросим его
+    start_dialog = UserNameDialog()
+    if not client_name or not client_passwd:
+        client_app.exec_()
+        # Если пользователь ввёл имя и нажал ОК, то сохраняем ведённое и
+        # удаляем объект, инааче выходим
+        if start_dialog.ok_pressed:
+            client_name = start_dialog.client_name.text()
+            client_passwd = start_dialog.client_passwd.text()
+            logger.debug(f'Using USERNAME = {client_name}, PASSWD = {client_passwd}.')
+        else:
+            exit(0)
+
+    # Записываем логи
+    logger.info(
+        f'Запущен клиент с парамертами: адрес сервера: {server_address} , порт: {server_port}, имя пользователя: {client_name}')
+
+    # Загружаем ключи с файла, если же файла нет, то генерируем новую пару.
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    key_file = os.path.join(dir_path, f'{client_name}.key')
+    if not os.path.exists(key_file):
+        keys = RSA.generate(2048, os.urandom)
+        with open(key_file, 'wb') as key:
+            key.write(keys.export_key())
+    else:
+        with open(key_file, 'rb') as key:
+            keys = RSA.import_key(key.read())
+
+    #!!!keys.publickey().export_key()
+    logger.debug("Keys sucsessfully loaded.")
+    # Создаём объект базы данных
+    database = ClientDatabase(client_name)
+    # Создаём объект - транспорт и запускаем транспортный поток
+    try:
+        transport = ClientTransport(
+            server_port,
+            server_address,
+            database,
+            client_name,
+            client_passwd,
+            keys)
+        logger.debug("Transport ready.")
+    except ServerError as error:
+        message = QMessageBox()
+        message.critical(start_dialog, 'Ошибка сервера', error.text)
+        exit(1)
+    transport.setDaemon(True)
+    transport.start()
+
+    # Удалим объект диалога за ненадобностью
+    del start_dialog
+
+    # Создаём GUI
+    main_window = ClientMainWindow(database, transport, keys)
+    main_window.make_connection(transport)
+    main_window.setWindowTitle(f'Чат Программа alpha release - {client_name}')
+    client_app.exec_()
+
+    # Раз графическая оболочка закрылась, закрываем транспорт
+    transport.transport_shutdown()
+    transport.join()
